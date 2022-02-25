@@ -35,7 +35,7 @@ Token *tokenize(char *p) {
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
-        *p == ')' || *p == '<' || *p == '>') {
+        *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=') {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;
       continue;
@@ -44,6 +44,12 @@ Token *tokenize(char *p) {
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p);
       cur->val = strtol(p, &p, 10);
+      continue;
+    }
+
+    if ('a' <= *p && *p <= 'z') {
+      cur = new_token(TK_IDENT, cur, p++);
+      cur->len = 1;
       continue;
     }
 

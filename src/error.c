@@ -3,6 +3,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Report error and exit
+// the args are same as printf
+void error(char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
+
 // Report error and its position and exit
 // the args are same as printf
 void error_at(char *loc, char *fmt, ...) {
