@@ -1,12 +1,21 @@
 CFLAGS=-std=c11 -g -static
 
-build/9cc: src/9cc.c
-	cc $(CFLAGS) -o $@ $<
+SRC=src
+BUILD=build
 
-test: build/9cc
+SRCS=$(wildcard $(SRC)/*.c)
+OBJS=$(SRCS:$(SRC)/%.c=$(BUILD)/%.o)
+
+$(BUILD)/9cc: $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
+
+$(BUILD)/%.o: $(SRC)/%.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+test: $(BUILD)/9cc
 	./test.sh
 
 clean:
-	rm -f build/*
+	rm -f $(BUILD)/*
 
 .PHONY: test clean
