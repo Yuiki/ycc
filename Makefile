@@ -6,13 +6,13 @@ BUILD=build
 SRCS=$(wildcard $(SRC)/*.c)
 OBJS=$(SRCS:$(SRC)/%.c=$(BUILD)/%.o)
 
-$(BUILD)/9cc: $(OBJS)
+$(BUILD)/ycc: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
 $(BUILD)/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-test: $(BUILD)/9cc
+test: $(BUILD)/ycc
 	./test.sh
 
 clean:
