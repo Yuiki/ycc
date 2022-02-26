@@ -43,5 +43,6 @@ assert 4 "1+1;2+2;"
 assert 20 "a=20;a;"
 assert 35 "a=20;b=15;a+b;"
 assert 35 "foo=20;bar=15;foo+bar;"
+assert 14 "a = 3;b = 5 * 6 - 8;return a + b / 2;"
 
 echo OK

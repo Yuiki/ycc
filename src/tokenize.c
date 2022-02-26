@@ -15,6 +15,11 @@ Token *new_token(TokenKind kind, Token *cur, char *str) {
   return tok;
 }
 
+int is_alnum(char c) {
+  return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
+         ('0' <= c && c <= '9') || (c == '_');
+}
+
 Token *tokenize(char *p) {
   Token head;
   head.next = NULL;
@@ -38,6 +43,13 @@ Token *tokenize(char *p) {
         *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=') {
       cur = new_token(TK_RESERVED, cur, p++);
       cur->len = 1;
+      continue;
+    }
+
+    if (!strncmp(p, "return", 6) && !is_alnum(p[6])) {
+      cur = new_token(TK_RETURN, cur, p);
+      p += 6;
+      cur->len = 6;
       continue;
     }
 
