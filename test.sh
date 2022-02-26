@@ -44,5 +44,8 @@ assert 20 "a=20;a;"
 assert 35 "a=20;b=15;a+b;"
 assert 35 "foo=20;bar=15;foo+bar;"
 assert 14 "a = 3;b = 5 * 6 - 8;return a + b / 2;"
+assert 1  "if (1) 1; else 0;"
+assert 22 "a=0;if (a) 11; else 22;"
+assert 2  "a=0;b=1;if (a) 1; else if (b) 2; else 3;"
 
 echo OK

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int label_if = 0;
+
 void gen_lval(Node *node) {
   if (node->kind != ND_LVAR) {
     error("代入の左辺値が変数ではありません");
@@ -39,6 +41,20 @@ void gen(Node *node) {
     printf("  pop rbp\n");
     printf("  ret\n");
     return;
+  case ND_IF: {
+    int label = label_if++;
+    gen(node->cond);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lelse%d\n", label);
+    gen(node->then);
+    printf("  jmp .Lend%d\n", label);
+    printf(".Lelse%d:\n", label);
+    gen(node->els);
+    printf(".Lend%d:\n", label);
+
+    return;
+  }
   default:
     break;
   }

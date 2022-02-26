@@ -53,6 +53,20 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if (!strncmp(p, "if", 2) && !is_alnum(p[2])) {
+      cur = new_token(TK_IF, cur, p);
+      p += 2;
+      cur->len = 2;
+      continue;
+    }
+
+    if (!strncmp(p, "else", 4) && !is_alnum(p[4])) {
+      cur = new_token(TK_ELSE, cur, p);
+      p += 4;
+      cur->len = 4;
+      continue;
+    }
+
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p);
       cur->val = strtol(p, &p, 10);

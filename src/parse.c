@@ -49,7 +49,7 @@ Token *consume_ident() {
 void expect(char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len ||
       memcmp(token->str, op, token->len)) {
-    error_at(token->str, "'%c'ではありません", op);
+    error_at(token->str, "'%s'ではありません", op);
   }
   token = token->next;
 }
@@ -217,11 +217,27 @@ Node *stmt() {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
+    expect(";");
+  } else if (token->kind == TK_IF) {
+    token = token->next;
+
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_IF;
+
+    expect("(");
+    node->cond = expr();
+    expect(")");
+    node->then = stmt();
+
+    if (token->kind == TK_ELSE) {
+      token = token->next;
+      node->els = stmt();
+    }
   } else {
     node = expr();
+    expect(";");
   }
 
-  expect(";");
   return node;
 }
 
