@@ -1,4 +1,3 @@
-
 typedef enum {
   ND_ADD,    // +
   ND_SUB,    // -

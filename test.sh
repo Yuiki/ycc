@@ -42,5 +42,6 @@ assert 1 "10<=20;"
 assert 4 "1+1;2+2;"
 assert 20 "a=20;a;"
 assert 35 "a=20;b=15;a+b;"
+assert 35 "foo=20;bar=15;foo+bar;"
 
 echo OK
