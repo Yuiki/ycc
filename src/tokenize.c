@@ -1,6 +1,7 @@
 #include "ycc.h"
 #include <ctype.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +19,24 @@ Token *new_token(TokenKind kind, Token *cur, char *str) {
 int is_alnum(char c) {
   return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
          ('0' <= c && c <= '9') || (c == '_');
+}
+
+// tokenize and return true if `kw` is keyword
+// otherwise, return false
+bool tokenize_kw(char **p, Token **cur, char *kw, TokenKind kind) {
+  int len = strlen(kw);
+  if (!strncmp(*p, kw, len) && !is_alnum((*p)[len])) {
+    Token *tok = calloc(1, sizeof(Token));
+    tok->kind = kind;
+    tok->str = *p;
+    tok->len = len;
+    *p += len;
+
+    (*cur)->next = tok;
+    (*cur) = tok;
+    return true;
+  }
+  return false;
 }
 
 Token *tokenize(char *p) {
@@ -46,24 +65,15 @@ Token *tokenize(char *p) {
       continue;
     }
 
-    if (!strncmp(p, "return", 6) && !is_alnum(p[6])) {
-      cur = new_token(TK_RETURN, cur, p);
-      p += 6;
-      cur->len = 6;
+    if ((tokenize_kw(&p, &cur, "return", TK_RETURN))) {
       continue;
     }
 
-    if (!strncmp(p, "if", 2) && !is_alnum(p[2])) {
-      cur = new_token(TK_IF, cur, p);
-      p += 2;
-      cur->len = 2;
+    if ((tokenize_kw(&p, &cur, "if", TK_IF))) {
       continue;
     }
 
-    if (!strncmp(p, "else", 4) && !is_alnum(p[4])) {
-      cur = new_token(TK_ELSE, cur, p);
-      p += 4;
-      cur->len = 4;
+    if ((tokenize_kw(&p, &cur, "else", TK_ELSE))) {
       continue;
     }
 

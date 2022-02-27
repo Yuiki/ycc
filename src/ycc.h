@@ -12,6 +12,7 @@ typedef enum {
   ND_LVAR,   // local variable
   ND_RETURN, // return
   ND_IF,
+  ND_WHILE,
 } NodeKind;
 
 typedef struct Node Node;
@@ -35,6 +36,7 @@ typedef enum {
   TK_RETURN, // return
   TK_IF,
   TK_ELSE,
+  TK_WHILE,
 } TokenKind;
 
 typedef struct Token Token;
