@@ -20,17 +20,26 @@ LVar *locals;
 
 Token *token;
 
-Node *code[100];
+Node *functions[100];
 
-// Advance `token` and return true if the next token is `op`
+// return true if the next token is `op`
 // Otherwise, return false
-bool consume(char *op) {
+bool is_next(char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len ||
       memcmp(token->str, op, token->len)) {
     return false;
   }
-  token = token->next;
   return true;
+}
+
+// Advance `token` and return true if the next token is `op`
+// Otherwise, return false
+bool consume(char *op) {
+  bool found = is_next(op);
+  if (found) {
+    token = token->next;
+  }
+  return found;
 }
 
 // Advance `token` and return true if the next token is identifier
@@ -93,6 +102,30 @@ LVar *find_lvar(Token *tok) {
 
 Node *expr();
 
+Node *create_var(Token *tok) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_LVAR;
+
+  LVar *lvar = find_lvar(tok);
+  if (lvar) {
+    node->offset = lvar->offset;
+  } else {
+    lvar = calloc(1, sizeof(LVar));
+    lvar->next = locals;
+    lvar->name = tok->str;
+    lvar->len = tok->len;
+    if (locals) {
+      lvar->offset = locals->offset + 8;
+    } else {
+      lvar->offset = 8;
+    }
+    node->offset = lvar->offset;
+    locals = lvar;
+  }
+
+  return node;
+}
+
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -123,27 +156,8 @@ Node *primary() {
         }
       }
       return node;
-    } else { // vars
-      Node *node = calloc(1, sizeof(Node));
-      node->kind = ND_LVAR;
-
-      LVar *lvar = find_lvar(tok);
-      if (lvar) {
-        node->offset = lvar->offset;
-      } else {
-        lvar = calloc(1, sizeof(LVar));
-        lvar->next = locals;
-        lvar->name = tok->str;
-        lvar->len = tok->len;
-        if (locals) {
-          lvar->offset = locals->offset + 8;
-        } else {
-          lvar->offset = 0;
-        }
-        node->offset = lvar->offset;
-        locals = lvar;
-      }
-      return node;
+    } else { // var
+      return create_var(tok);
     }
   }
 
@@ -230,6 +244,28 @@ Node *assign() {
 
 Node *expr() { return assign(); }
 
+Node *stmt();
+
+Node *block() {
+  expect("{");
+
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_BLOCK;
+
+  Node *head = NULL;
+  while (!consume("}")) {
+    if (head == NULL) {
+      head = stmt();
+      node->body = head;
+      continue;
+    }
+    head->next = stmt();
+    head = head->next;
+  }
+
+  return node;
+}
+
 Node *stmt() {
   Node *node;
 
@@ -289,20 +325,8 @@ Node *stmt() {
     }
 
     node->then = stmt();
-  } else if (consume("{")) {
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_BLOCK;
-
-    Node *head = NULL;
-    while (!consume("}")) {
-      if (head == NULL) {
-        head = stmt();
-        node->body = head;
-        continue;
-      }
-      head->next = stmt();
-      head = head->next;
-    }
+  } else if (is_next("{")) {
+    node = block();
   } else {
     node = expr();
     expect(";");
@@ -311,10 +335,45 @@ Node *stmt() {
   return node;
 }
 
+Node *function() {
+  if (token->kind != TK_IDENT) {
+    error_at(token->str, "関数名ではありません");
+  }
+  Token *tok = token;
+  token = token->next;
+
+  expect("(");
+
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_FUNC;
+  node->func = tok->str;
+  node->func_len = tok->len;
+
+  Node *head = NULL;
+  while (!consume(")")) {
+    Token *param = consume_ident();
+    if (head == NULL) {
+      head = create_var(param);
+      node->params = head;
+    } else {
+      head->next = create_var(param);
+      head = head->next;
+    }
+    if (!consume(",")) {
+      expect(")");
+      break;
+    }
+  }
+
+  node->block = block();
+
+  return node;
+}
+
 void program() {
   int i = 0;
   while (!at_eof()) {
-    code[i++] = stmt();
+    functions[i++] = function();
   }
-  code[i] = NULL;
+  functions[i] = NULL;
 }

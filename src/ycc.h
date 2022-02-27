@@ -16,6 +16,7 @@ typedef enum {
   ND_FOR,
   ND_BLOCK, // {}
   ND_CALL,  // function call
+  ND_FUNC,  // function declaration
 } NodeKind;
 
 typedef struct Node Node;
@@ -38,10 +39,13 @@ struct Node {
   int val;    // the number if kind = ND_NUM
   int offset; // use if kind = ND_LVAR
 
-  char *func;   // function name if kind = ND_CALL
-  int func_len; // func name len if kind = ND_CALL
+  char *func;   // function name if kind = ND_CALL, ND_FUNC
+  int func_len; // func name len if kind = ND_CALL, ND_FUNC
 
   Node *args; // if kind = ND_CALL
+
+  Node *block;  // if kind = ND_FUNC
+  Node *params; // if kind = ND_FUNC
 };
 
 typedef enum {
@@ -72,7 +76,7 @@ extern Token *token;
 // input program
 extern char *user_input;
 
-extern Node *code[100];
+extern Node *functions[100];
 
 Token *tokenize(char *p);
 

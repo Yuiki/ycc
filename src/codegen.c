@@ -92,7 +92,6 @@ void gen(Node *node) {
     Node *arg = node->args;
     // TODO: support >6 args
     for (int i = 0; arg != NULL && i < 6; i++) {
-      printf("  push 100\n");
       gen(arg);
       if (i == 0) {
         printf("  pop rdi\n");
@@ -112,6 +111,49 @@ void gen(Node *node) {
     // TODO: support /16 alignment
     printf("  call %.*s\n", node->func_len, node->func);
     printf("  push rax\n");
+    return;
+  }
+  case ND_FUNC: {
+    printf("%.*s:\n", node->func_len, node->func);
+
+    // prologue
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+    printf("  sub rsp, 208\n"); // TODO: support >26 local vars
+
+    Node *param = node->params;
+    // TODO: support >6 params
+    for (int i = 0; param != NULL && i < 6; i++) {
+      gen_lval(param);
+      if (i == 0) {
+        printf("  push rdi\n");
+      } else if (i == 1) {
+        printf("  push rsi\n");
+      } else if (i == 2) {
+        printf("  push rdx\n");
+      } else if (i == 3) {
+        printf("  push rcx\n");
+      } else if (i == 4) {
+        printf("  push r8\n");
+      } else if (i == 5) {
+        printf("  push r9\n");
+      }
+
+      printf("  pop rdi\n");
+      printf("  pop rax\n");
+      printf("  mov [rax], rdi\n");
+
+      param = param->next;
+    }
+
+    gen(node->block);
+    printf("  pop rax\n");
+
+    // epilogue
+    // TODO: remove
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
+    printf("  ret\n");
     return;
   }
   default:
