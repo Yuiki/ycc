@@ -13,6 +13,7 @@ $(BUILD)/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 test: $(BUILD)/ycc
+	$(CC) -c test.c -o build/test.o
 	./test.sh
 
 clean:

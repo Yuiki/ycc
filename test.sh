@@ -2,12 +2,13 @@
 assert() {
     expected="$1"
     input="$2"
+    link_file="$3"
 
     ./build/ycc "$input" > ./build/tmp.s
-    cc -o ./build/tmp ./build/tmp.s
+    cc -o ./build/tmp ./build/tmp.s $link_file
     ./build/tmp
     actual="$?"
-      
+
     if [ "$actual" = "$expected" ]; then
         echo "$input => $actual"
     else
@@ -50,5 +51,6 @@ assert 2  "a=0;b=1;if (a) 1; else if (b) 2; else 3;"
 assert 10 "i = 0; while (i < 10) i = i + 1; i;"
 assert 55 "a = 0; for (i = 1; i <= 10; i = i + 1) a = a + i; a;"
 assert 165 "a = 0; b = 0; for (i = 1; i <= 10; i = i + 1) { a = a + i; b = b + i * 2; } a + b;"
+assert 1 "foo(); 1;" "./build/test.o"
 
 echo OK

@@ -15,6 +15,7 @@ typedef enum {
   ND_WHILE,
   ND_FOR,
   ND_BLOCK, // {}
+  ND_CALL,  // function call
 } NodeKind;
 
 typedef struct Node Node;
@@ -36,6 +37,9 @@ struct Node {
 
   int val;    // the number if kind = ND_NUM
   int offset; // use if kind = ND_LVAR
+
+  char *func;   // function name if kind = ND_CALL
+  int func_len; // func name len if kind = ND_CALL
 };
 
 typedef enum {

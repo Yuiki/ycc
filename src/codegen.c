@@ -88,6 +88,10 @@ void gen(Node *node) {
     }
     return;
   }
+  case ND_CALL: {
+    printf("  call %.*s\n", node->func_len, node->func);
+    return;
+  }
   default:
     break;
   }
