@@ -339,6 +339,9 @@ Node *function() {
   if (token->kind != TK_IDENT) {
     error_at(token->str, "関数名ではありません");
   }
+
+  locals = NULL;
+
   Token *tok = token;
   token = token->next;
 
