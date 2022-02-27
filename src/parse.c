@@ -267,6 +267,20 @@ Node *stmt() {
     }
 
     node->then = stmt();
+  } else if (consume("{")) {
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_BLOCK;
+
+    Node *head = NULL;
+    while (!consume("}")) {
+      if (head == NULL) {
+        head = stmt();
+        node->body = head;
+        continue;
+      }
+      head->next = stmt();
+      head = head->next;
+    }
   } else {
     node = expr();
     expect(";");

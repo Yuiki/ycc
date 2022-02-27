@@ -80,6 +80,14 @@ void gen(Node *node) {
     printf(".Lend%d:\n", label);
     return;
   }
+  case ND_BLOCK: {
+    Node *head = node->body;
+    while (head != NULL) {
+      gen(head);
+      head = head->next;
+    }
+    return;
+  }
   default:
     break;
   }
