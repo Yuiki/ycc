@@ -89,7 +89,29 @@ void gen(Node *node) {
     return;
   }
   case ND_CALL: {
+    Node *arg = node->args;
+    // TODO: support >6 args
+    for (int i = 0; arg != NULL && i < 6; i++) {
+      printf("  push 100\n");
+      gen(arg);
+      if (i == 0) {
+        printf("  pop rdi\n");
+      } else if (i == 1) {
+        printf("  pop rsi\n");
+      } else if (i == 2) {
+        printf("  pop rdx\n");
+      } else if (i == 3) {
+        printf("  pop rcx\n");
+      } else if (i == 4) {
+        printf("  pop r8\n");
+      } else if (i == 5) {
+        printf("  pop r9\n");
+      }
+      arg = arg->next;
+    }
+    // TODO: support /16 alignment
     printf("  call %.*s\n", node->func_len, node->func);
+    printf("  push rax\n");
     return;
   }
   default:

@@ -51,6 +51,8 @@ assert 2  "a=0;b=1;if (a) 1; else if (b) 2; else 3;"
 assert 10 "i = 0; while (i < 10) i = i + 1; i;"
 assert 55 "a = 0; for (i = 1; i <= 10; i = i + 1) a = a + i; a;"
 assert 165 "a = 0; b = 0; for (i = 1; i <= 10; i = i + 1) { a = a + i; b = b + i * 2; } a + b;"
-assert 1 "foo(); 1;" "./build/test.o"
+assert 1  "foo(); 1;" "./build/test.o"
+assert 1 "bar(1, 2, 3, 4, 5, 6); 1;" "./build/test.o"
+assert 100 "echo(100);" "./build/test.o"
 
 echo OK

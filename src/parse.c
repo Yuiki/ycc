@@ -107,7 +107,21 @@ Node *primary() {
       node->kind = ND_CALL;
       node->func = tok->str;
       node->func_len = tok->len;
-      expect(")");
+
+      Node *head = NULL;
+      while (!consume(")")) {
+        if (head == NULL) {
+          head = expr();
+          node->args = head;
+        } else {
+          head->next = expr();
+          head = head->next;
+        }
+        if (!consume(",")) {
+          expect(")");
+          break;
+        }
+      }
       return node;
     } else { // vars
       Node *node = calloc(1, sizeof(Node));

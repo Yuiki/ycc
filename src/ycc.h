@@ -22,6 +22,7 @@ typedef struct Node Node;
 
 struct Node {
   NodeKind kind;
+  Node *next; // next node if kind = ND_BLOCK, ND_CALL
 
   Node *lhs; // left side
   Node *rhs; // right side
@@ -33,13 +34,14 @@ struct Node {
   Node *els;  // else stmt if kind = ND_IF
 
   Node *body; // if kind = ND_BLOCK
-  Node *next; // next stmt if body
 
   int val;    // the number if kind = ND_NUM
   int offset; // use if kind = ND_LVAR
 
   char *func;   // function name if kind = ND_CALL
   int func_len; // func name len if kind = ND_CALL
+
+  Node *args; // if kind = ND_CALL
 };
 
 typedef enum {

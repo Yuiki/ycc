@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
   // prologue
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 208\n"); // support 26 local vars
+  printf("  sub rsp, 208\n"); // TODO: support >26 local vars
 
   for (int i = 0; code[i]; i++) {
     gen(code[i]);
