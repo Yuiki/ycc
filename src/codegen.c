@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int label_if = 0;
+int label_cnt = 0;
 
 void gen_lval(Node *node) {
   if (node->kind != ND_LVAR) {
@@ -42,7 +42,7 @@ void gen(Node *node) {
     printf("  ret\n");
     return;
   case ND_IF: {
-    int label = label_if++;
+    int label = label_cnt++;
     gen(node->cond);
     printf("  pop rax\n");
     printf("  cmp rax, 0\n");
@@ -52,7 +52,18 @@ void gen(Node *node) {
     printf(".Lelse%d:\n", label);
     gen(node->els);
     printf(".Lend%d:\n", label);
-
+    return;
+  }
+  case ND_WHILE: {
+    int label = label_cnt++;
+    printf(".Lbegin%d:\n", label);
+    gen(node->cond);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lend%d\n", label);
+    gen(node->then);
+    printf("  jmp .Lbegin%d\n", label);
+    printf(".Lend%d:\n", label);
     return;
   }
   default:
