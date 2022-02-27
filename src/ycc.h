@@ -13,6 +13,7 @@ typedef enum {
   ND_RETURN, // return
   ND_IF,
   ND_WHILE,
+  ND_FOR,
 } NodeKind;
 
 typedef struct Node Node;
@@ -21,8 +22,10 @@ struct Node {
   NodeKind kind;
   Node *lhs;  // left side
   Node *rhs;  // right side
-  Node *cond; // cond expr if kind = ND_IF
-  Node *then; // then stmt if kind = ND_IF
+  Node *init; // init expr if kind = ND_FOR
+  Node *cond; // cond expr if kind = ND_IF, ND_WHILE, ND_FOR
+  Node *step; // step expr if kind = ND_FOR
+  Node *then; // then stmt if kind = ND_IF, ND_WHILE
   Node *els;  // else stmt if kind = ND_IF
   int val;    // the number if kind = ND_NUM
   int offset; // use if kind = ND_LVAR
@@ -37,6 +40,7 @@ typedef enum {
   TK_IF,
   TK_ELSE,
   TK_WHILE,
+  TK_FOR,
 } TokenKind;
 
 typedef struct Token Token;

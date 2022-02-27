@@ -48,5 +48,6 @@ assert 1  "if (1) 1; else 0;"
 assert 22 "a=0;if (a) 11; else 22;"
 assert 2  "a=0;b=1;if (a) 1; else if (b) 2; else 3;"
 assert 10 "i = 0; while (i < 10) i = i + 1; i;"
+assert 55 "a = 0; for (i = 1; i <= 10; i = i + 1) a = a + i; a;"
 
 echo OK
