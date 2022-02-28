@@ -22,6 +22,13 @@ typedef enum {
   ND_NOP,   // no-op
 } NodeKind;
 
+typedef struct Type Type;
+
+struct Type {
+  enum { INT, PTR } ty;
+  struct Type *ptr_to; // pointer if ty = PTR
+};
+
 typedef struct Node Node;
 
 struct Node {

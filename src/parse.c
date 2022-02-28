@@ -13,6 +13,7 @@ struct LVar {
   char *name;
   int len;    // len of name
   int offset; // offset from RBP
+  Type *type; // use if kind = ND_LVAR
 };
 
 // local vars
@@ -102,7 +103,7 @@ LVar *find_lvar(Token *tok) {
 
 Node *expr();
 
-Node *create_var(Token *tok) {
+Node *create_var(Token *tok, Type *type) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_LVAR;
 
@@ -122,6 +123,7 @@ Node *create_var(Token *tok) {
     node->offset = lvar->offset;
     locals = lvar;
   }
+  lvar->type = type;
 
   return node;
 }
@@ -350,8 +352,17 @@ Node *stmt() {
     node = block();
   } else if (token->kind == TK_INT) {
     token = token->next;
+
+    Type *type = calloc(1, sizeof(Type));
+    type->ty = INT;
+    while (consume("*")) {
+      Type *new_type = calloc(1, sizeof(Type));
+      new_type->ptr_to = type;
+      type = new_type;
+    }
+
     Token *ident = consume_ident();
-    create_var(ident);
+    create_var(ident, type);
     expect(";");
 
     node = calloc(1, sizeof(Node));
@@ -369,6 +380,9 @@ Node *function() {
     error_at(token->str, "関数の戻り値の型がintではありません");
   }
   token = token->next;
+
+  while (consume("*")) {
+  }
 
   if (token->kind != TK_IDENT) {
     error_at(token->str, "関数名ではありません");
@@ -393,12 +407,20 @@ Node *function() {
     }
     token = token->next;
 
+    Type *type = calloc(1, sizeof(Type));
+    type->ty = INT;
+    while (consume("*")) {
+      Type *new_type = calloc(1, sizeof(Type));
+      new_type->ptr_to = type;
+      type = new_type;
+    }
+
     Token *param = consume_ident();
     if (head == NULL) {
-      head = create_var(param);
+      head = create_var(param, type);
       node->params = head;
     } else {
-      head->next = create_var(param);
+      head->next = create_var(param, type);
       head = head->next;
     }
     if (!consume(",")) {

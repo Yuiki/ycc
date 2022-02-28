@@ -20,7 +20,11 @@ void gen(Node *node) {
     printf("  push %d\n", node->val);
     return;
   case ND_ASSIGN:
-    gen_lval(node->lhs);
+    if (node->lhs->kind == ND_DEREF) {
+      gen(node->lhs->lhs);
+    } else {
+      gen_lval(node->lhs);
+    }
     gen(node->rhs);
 
     printf("  pop rdi\n");

@@ -59,5 +59,7 @@ assert 100 "int echo(int x) { int c;c=3;return x; } int main(){int a;int b;a=1;b
 assert 89 "int fib(int n) { if (n == 0) return 0; else if (n == 1) return 1; else return fib(n - 2) + fib(n - 1); } int main() { fib(11); }"
 assert 3  "int main() { int x; int y; x = 3; y = &x; return *y; }"
 assert 3  "int main() { int x; int y; int z; x = 3; y = 5; z = &y + 8; return *z; }"
+assert 3  "int main(){ int x; int *y; y = &x; *y = 3; return x;}"
+assert 1  "int *echo(int *x) { return x; } int main(){ int x; int *y; x = 1; y = echo(x); return y; }"
 
 echo OK
