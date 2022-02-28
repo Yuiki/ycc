@@ -19,6 +19,7 @@ typedef enum {
   ND_FUNC,  // function declaration
   ND_ADDR,  // &
   ND_DEREF, // *
+  ND_NOP,   // no-op
 } NodeKind;
 
 typedef struct Node Node;
@@ -60,6 +61,7 @@ typedef enum {
   TK_ELSE,
   TK_WHILE,
   TK_FOR,
+  TK_INT, // int
 } TokenKind;
 
 typedef struct Token Token;

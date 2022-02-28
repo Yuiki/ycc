@@ -86,6 +86,10 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if ((tokenize_kw(&p, &cur, "int", TK_INT))) {
+      continue;
+    }
+
     if (isdigit(*p)) {
       cur = new_token(TK_NUM, cur, p);
       cur->val = strtol(p, &p, 10);

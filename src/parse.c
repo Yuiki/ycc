@@ -157,7 +157,15 @@ Node *primary() {
       }
       return node;
     } else { // var
-      return create_var(tok);
+      Node *node = calloc(1, sizeof(Node));
+      node->kind = ND_LVAR;
+      LVar *lvar = find_lvar(tok);
+      if (lvar) {
+        node->offset = lvar->offset;
+        return node;
+      } else {
+        error_at(token->str, "未定義の識別子です");
+      }
     }
   }
 
@@ -340,6 +348,14 @@ Node *stmt() {
     node->then = stmt();
   } else if (is_next("{")) {
     node = block();
+  } else if (token->kind == TK_INT) {
+    token = token->next;
+    Token *ident = consume_ident();
+    create_var(ident);
+    expect(";");
+
+    node = calloc(1, sizeof(Node));
+    node->kind = ND_NOP;
   } else {
     node = expr();
     expect(";");
