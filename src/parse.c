@@ -6,16 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct LVar LVar;
-
-struct LVar {
-  LVar *next; // next var or NULL
-  char *name;
-  int len;    // len of name
-  int offset; // offset from RBP
-  Type *type; // use if kind = ND_LVAR
-};
-
 // local vars
 LVar *locals;
 
@@ -382,7 +372,7 @@ Node *stmt() {
     node->then = stmt();
   } else if (is_next("{")) {
     node = block();
-  } else if (token->kind == TK_INT) {
+  } else if (token->kind == TK_INT) { // declaration
     token = token->next;
 
     Type *type = calloc(1, sizeof(Type));
@@ -396,6 +386,14 @@ Node *stmt() {
 
     Token *ident = consume_ident();
     create_var(ident, type);
+
+    if (consume("[")) {
+      type->array_size = expect_number();
+      expect("]");
+
+      type->ty = ARRAY;
+    }
+
     expect(";");
 
     node = calloc(1, sizeof(Node));
@@ -464,6 +462,8 @@ Node *function() {
   }
 
   node->block = block();
+
+  node->locals = locals;
 
   return node;
 }

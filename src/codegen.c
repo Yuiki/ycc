@@ -14,6 +14,18 @@ void gen_lval(Node *node) {
   printf("  push rax\n");
 }
 
+int calc_stack_size(LVar *locals) {
+  int size = 0;
+  for (LVar *local = locals; local; local = local->next) {
+    int len = 1;
+    if (local->type->ty == ARRAY) {
+      len = local->type->array_size;
+    }
+    size += len * 8;
+  }
+  return size;
+}
+
 void gen(Node *node) {
   switch (node->kind) {
   case ND_NUM:
@@ -123,7 +135,8 @@ void gen(Node *node) {
     // prologue
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
-    printf("  sub rsp, 208\n"); // TODO: support >26 local vars
+    int stack_size = calc_stack_size(node->locals);
+    printf("  sub rsp, %d\n", stack_size);
 
     Node *param = node->params;
     // TODO: support >6 params

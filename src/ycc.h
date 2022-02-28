@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 typedef enum {
   ND_ADD,    // +
   ND_SUB,    // -
@@ -24,11 +26,22 @@ typedef enum {
 
 typedef struct Type Type;
 
-typedef enum { INT, PTR } TypeKind;
+typedef enum { INT, PTR, ARRAY } TypeKind;
 
 struct Type {
   TypeKind ty;
   struct Type *ptr_to; // pointer if ty = PTR
+  size_t array_size;
+};
+
+typedef struct LVar LVar;
+
+struct LVar {
+  LVar *next; // next var or NULL
+  char *name;
+  int len;    // len of name
+  int offset; // offset from RBP
+  Type *type; // use if kind = ND_LVAR
 };
 
 typedef struct Node Node;
@@ -60,6 +73,8 @@ struct Node {
   Node *params; // if kind = ND_FUNC
 
   Type *type; // if kind = ND_LVAR
+
+  LVar *locals; // if kind = ND_FUNC
 };
 
 typedef enum {
