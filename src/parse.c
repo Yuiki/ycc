@@ -77,11 +77,24 @@ int expect_number() {
 
 bool at_eof() { return token->kind == TK_EOF; }
 
+Type *new_type(TypeKind ty) {
+  Type *type = calloc(1, sizeof(Type));
+  type->ty = ty;
+  return type;
+}
+
 Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = kind;
   node->lhs = lhs;
   node->rhs = rhs;
+
+  if (lhs->type->ty == INT && rhs->type->ty == INT) {
+    node->type = new_type(INT);
+  } else { // pointer
+    node->type = new_type(PTR);
+  }
+
   return node;
 }
 
@@ -89,6 +102,7 @@ Node *new_node_num(int val) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_NUM;
   node->val = val;
+  node->type = new_type(INT);
   return node;
 }
 
@@ -143,6 +157,8 @@ Node *primary() {
       node->kind = ND_CALL;
       node->func = tok->str;
       node->func_len = tok->len;
+      // TODO: set proper type
+      node->type = new_type(INT);
 
       Node *head = NULL;
       while (!consume(")")) {
@@ -177,16 +193,30 @@ Node *primary() {
 }
 
 Node *unary() {
+  if (token->kind == TK_SIZEOF) {
+    token = token->next;
+
+    Node *child = unary();
+    int val;
+    if (child->type->ty == INT) {
+      val = 4;
+    } else { // pointer
+      val = 8;
+    }
+    return new_node_num(val);
+  }
   if (consume("*")) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_DEREF;
     node->lhs = unary();
+    node->type = node->lhs->type->ptr_to;
     return node;
   }
   if (consume("&")) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_ADDR;
     node->lhs = unary();
+    node->type = new_type(PTR);
     return node;
   }
 

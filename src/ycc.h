@@ -24,8 +24,10 @@ typedef enum {
 
 typedef struct Type Type;
 
+typedef enum { INT, PTR } TypeKind;
+
 struct Type {
-  enum { INT, PTR } ty;
+  TypeKind ty;
   struct Type *ptr_to; // pointer if ty = PTR
 };
 
@@ -70,7 +72,8 @@ typedef enum {
   TK_ELSE,
   TK_WHILE,
   TK_FOR,
-  TK_INT, // int
+  TK_INT,    // int
+  TK_SIZEOF, // sizeof
 } TokenKind;
 
 typedef struct Token Token;

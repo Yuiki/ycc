@@ -63,5 +63,12 @@ assert 3  "int main(){ int x; int *y; y = &x; *y = 3; return x;}"
 assert 1  "int *echo(int *x) { return x; } int main(){ int x; int *y; x = 1; y = echo(x); return y; }"
 assert 4 "int main(){int *p; alloc4(&p, 1, 2, 4, 8); int *q;q = p + 2; return *q;}" "./build/test.o"
 assert 8 "int main(){int *p; alloc4(&p, 1, 2, 4, 8); int *q;q = p + 3; return *q;}" "./build/test.o"
+assert 4  "int main() { int x; return sizeof(x); }"
+assert 8  "int main() { int *y; return sizeof(y); }"
+assert 4  "int main() { int x; return sizeof(x + 3); }"
+assert 8  "int main() { int *y; return sizeof(y + 3); }"
+assert 4  "int main() { int *y; return sizeof(*y); }"
+assert 4  "int main() { return sizeof(1); }"
+assert 4  "int main() { return sizeof(sizeof(1)); }"
 
 echo OK
