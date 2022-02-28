@@ -17,6 +17,8 @@ typedef enum {
   ND_BLOCK, // {}
   ND_CALL,  // function call
   ND_FUNC,  // function declaration
+  ND_ADDR,  // &
+  ND_DEREF, // *
 } NodeKind;
 
 typedef struct Node Node;

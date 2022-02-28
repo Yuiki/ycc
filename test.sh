@@ -57,5 +57,7 @@ assert 100 "main(){echo(100);}" "./build/test.o"
 assert 100 "echo(x) { return x; } main(){echo(100);}"
 assert 100 "echo(x) { c=3;return x; } main(){a=1;b=2;echo(100);}"
 assert 89 "fib(n) { if (n == 0) return 0; else if (n == 1) return 1; else return fib(n - 2) + fib(n - 1); } main() { fib(11); }"
+assert 3  "main() { x = 3; y = &x; return *y; }"
+assert 3  "main() { x = 3; y = 5; z = &y + 8; return *z; }"
 
 echo OK

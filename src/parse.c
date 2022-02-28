@@ -165,6 +165,19 @@ Node *primary() {
 }
 
 Node *unary() {
+  if (consume("*")) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_DEREF;
+    node->lhs = unary();
+    return node;
+  }
+  if (consume("&")) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_ADDR;
+    node->lhs = unary();
+    return node;
+  }
+
   if (consume("+")) {
     return primary();
   }
