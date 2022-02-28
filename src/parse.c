@@ -82,7 +82,15 @@ Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   if (lhs->type->ty == INT && rhs->type->ty == INT) {
     node->type = new_type(INT);
   } else { // pointer
-    node->type = new_type(PTR);
+    Type *new_ty = new_type(PTR);
+    Type *ptr_to;
+    if (lhs->type->ptr_to != NULL) {
+      ptr_to = lhs->type->ptr_to;
+    } else {
+      ptr_to = rhs->type->ptr_to;
+    }
+    new_ty->ptr_to = ptr_to;
+    node->type = new_ty;
   }
 
   return node;
@@ -385,14 +393,16 @@ Node *stmt() {
     }
 
     Token *ident = consume_ident();
-    create_var(ident, type);
-
     if (consume("[")) {
-      type->array_size = expect_number();
+      Type *new_ty = new_type(ARRAY);
+      new_ty->array_size = expect_number();
       expect("]");
 
-      type->ty = ARRAY;
+      new_ty->ptr_to = type;
+      type = new_ty;
     }
+
+    create_var(ident, type);
 
     expect(";");
 

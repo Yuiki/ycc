@@ -46,9 +46,11 @@ void gen(Node *node) {
     return;
   case ND_LVAR:
     gen_lval(node);
-    printf("  pop rax\n");
-    printf("  mov rax, [rax]\n");
-    printf("  push rax\n");
+    if (node->type->ty != ARRAY) {
+      printf("  pop rax\n");
+      printf("  mov rax, [rax]\n");
+      printf("  push rax\n");
+    }
     return;
   case ND_RETURN:
     gen(node->lhs);
@@ -197,10 +199,10 @@ void gen(Node *node) {
   switch (node->kind) {
   case ND_ADD:
     if (node->lhs->kind == ND_LVAR) {
-      if (node->lhs->type->ty == PTR) {
+      if (node->lhs->type->ty == PTR || node->lhs->type->ty == ARRAY) {
         if (node->lhs->type->ptr_to->ty == INT) {
           printf("  imul rdi, 4\n");
-        } else if (node->lhs->type->ptr_to->ty == PTR) {
+        } else {
           printf("  imul rdi, 8\n");
         }
       }
@@ -208,6 +210,7 @@ void gen(Node *node) {
     printf("  add rax, rdi\n");
     break;
   case ND_SUB:
+    // TODO: handle pointer
     printf("  sub rax, rdi\n");
     break;
   case ND_MUL:
