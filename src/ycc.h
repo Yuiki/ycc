@@ -56,6 +56,8 @@ struct Node {
 
   Node *block;  // if kind = ND_FUNC
   Node *params; // if kind = ND_FUNC
+
+  Type *type; // if kind = ND_LVAR
 };
 
 typedef enum {

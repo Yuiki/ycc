@@ -106,6 +106,7 @@ Node *expr();
 Node *create_var(Token *tok, Type *type) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_LVAR;
+  node->type = type;
 
   LVar *lvar = find_lvar(tok);
   if (lvar) {
@@ -164,6 +165,7 @@ Node *primary() {
       LVar *lvar = find_lvar(tok);
       if (lvar) {
         node->offset = lvar->offset;
+        node->type = lvar->type;
         return node;
       } else {
         error_at(token->str, "未定義の識別子です");
@@ -358,6 +360,7 @@ Node *stmt() {
     while (consume("*")) {
       Type *new_type = calloc(1, sizeof(Type));
       new_type->ptr_to = type;
+      new_type->ty = PTR;
       type = new_type;
     }
 
@@ -411,6 +414,7 @@ Node *function() {
     type->ty = INT;
     while (consume("*")) {
       Type *new_type = calloc(1, sizeof(Type));
+      new_type->ty = PTR;
       new_type->ptr_to = type;
       type = new_type;
     }

@@ -97,7 +97,7 @@ Token *tokenize(char *p) {
     }
 
     char *start = p;
-    while ('a' <= *p && *p <= 'z') {
+    while (is_alnum(*p)) {
       p++;
     }
     if (start != p) { // found identifier
