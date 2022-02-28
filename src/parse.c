@@ -365,6 +365,11 @@ Node *stmt() {
 }
 
 Node *function() {
+  if (token->kind != TK_INT) {
+    error_at(token->str, "関数の戻り値の型がintではありません");
+  }
+  token = token->next;
+
   if (token->kind != TK_IDENT) {
     error_at(token->str, "関数名ではありません");
   }
@@ -383,6 +388,11 @@ Node *function() {
 
   Node *head = NULL;
   while (!consume(")")) {
+    if (token->kind != TK_INT) {
+      error_at(token->str, "関数のパラメータの型がintではありません");
+    }
+    token = token->next;
+
     Token *param = consume_ident();
     if (head == NULL) {
       head = create_var(param);
