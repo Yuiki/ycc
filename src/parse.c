@@ -180,6 +180,19 @@ Node *primary() {
       if (lvar) {
         node->offset = lvar->offset;
         node->type = lvar->type;
+
+        if (consume("[")) {
+          Node *add = new_node(ND_ADD, node, expr());
+
+          Node *deref = calloc(1, sizeof(Node));
+          deref->kind = ND_DEREF;
+          deref->lhs = add;
+          deref->type = new_type(INT);
+
+          expect("]");
+
+          return deref;
+        }
         return node;
       } else {
         error_at(token->str, "未定義の識別子です");
