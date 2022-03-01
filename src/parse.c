@@ -11,7 +11,7 @@ LVar *locals;
 
 Token *token;
 
-Node *functions[100];
+Node *globals[100];
 
 // return true if the next token is `op`
 // Otherwise, return false
@@ -332,6 +332,49 @@ Node *block() {
   return node;
 }
 
+Type *type_ident(Token **ident) {
+  if (token->kind != TK_INT) {
+    error_at(token->str, "型がintではありません");
+  }
+  token = token->next;
+
+  Type *type = calloc(1, sizeof(Type));
+  type->ty = INT;
+  while (consume("*")) {
+    Type *new_type = calloc(1, sizeof(Type));
+    new_type->ptr_to = type;
+    new_type->ty = PTR;
+    type = new_type;
+  }
+
+  *ident = consume_ident();
+  if (*ident == NULL) {
+    error_at(token->str, "識別子ではありません");
+  }
+  return type;
+}
+
+Node *var_decla() {
+  Token *ident;
+  Type *type = type_ident(&ident);
+  if (consume("[")) {
+    Type *new_ty = new_type(ARRAY);
+    new_ty->array_size = expect_number();
+    expect("]");
+
+    new_ty->ptr_to = type;
+    type = new_ty;
+  }
+
+  create_var(ident, type);
+
+  expect(";");
+
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_NOP;
+  return node;
+}
+
 Node *stmt() {
   Node *node;
 
@@ -394,33 +437,7 @@ Node *stmt() {
   } else if (is_next("{")) {
     node = block();
   } else if (token->kind == TK_INT) { // declaration
-    token = token->next;
-
-    Type *type = calloc(1, sizeof(Type));
-    type->ty = INT;
-    while (consume("*")) {
-      Type *new_type = calloc(1, sizeof(Type));
-      new_type->ptr_to = type;
-      new_type->ty = PTR;
-      type = new_type;
-    }
-
-    Token *ident = consume_ident();
-    if (consume("[")) {
-      Type *new_ty = new_type(ARRAY);
-      new_ty->array_size = expect_number();
-      expect("]");
-
-      new_ty->ptr_to = type;
-      type = new_ty;
-    }
-
-    create_var(ident, type);
-
-    expect(";");
-
-    node = calloc(1, sizeof(Node));
-    node->kind = ND_NOP;
+    node = var_decla();
   } else {
     node = expr();
     expect(";");
@@ -430,29 +447,17 @@ Node *stmt() {
 }
 
 Node *function() {
-  if (token->kind != TK_INT) {
-    error_at(token->str, "関数の戻り値の型がintではありません");
-  }
-  token = token->next;
-
-  while (consume("*")) {
-  }
-
-  if (token->kind != TK_IDENT) {
-    error_at(token->str, "関数名ではありません");
-  }
+  Token *ident;
+  Type *type = type_ident(&ident);
 
   locals = NULL;
-
-  Token *tok = token;
-  token = token->next;
 
   expect("(");
 
   Node *node = calloc(1, sizeof(Node));
   node->kind = ND_FUNC;
-  node->func = tok->str;
-  node->func_len = tok->len;
+  node->func = ident->str;
+  node->func_len = ident->len;
 
   Node *head = NULL;
   while (!consume(")")) {
@@ -494,7 +499,7 @@ Node *function() {
 void program() {
   int i = 0;
   while (!at_eof()) {
-    functions[i++] = function();
+    globals[i++] = function();
   }
-  functions[i] = NULL;
+  globals[i] = NULL;
 }

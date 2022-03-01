@@ -107,7 +107,8 @@ extern Token *token;
 // input program
 extern char *user_input;
 
-extern Node *functions[100];
+// TODO: support >100
+extern Node *globals[100];
 
 Token *tokenize(char *p);
 
