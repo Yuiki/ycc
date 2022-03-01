@@ -207,10 +207,36 @@ void gen(Node *node) {
         }
       }
     }
+    if (node->rhs->kind == ND_LVAR) {
+      if (node->rhs->type->ty == PTR || node->rhs->type->ty == ARRAY) {
+        if (node->rhs->type->ptr_to->ty == INT) {
+          printf("  imul rax, 4\n");
+        } else {
+          printf("  imul rax, 8\n");
+        }
+      }
+    }
     printf("  add rax, rdi\n");
     break;
   case ND_SUB:
-    // TODO: handle pointer
+    if (node->lhs->kind == ND_LVAR) {
+      if (node->lhs->type->ty == PTR || node->lhs->type->ty == ARRAY) {
+        if (node->lhs->type->ptr_to->ty == INT) {
+          printf("  imul rdi, 4\n");
+        } else {
+          printf("  imul rdi, 8\n");
+        }
+      }
+    }
+    if (node->rhs->kind == ND_LVAR) {
+      if (node->rhs->type->ty == PTR || node->rhs->type->ty == ARRAY) {
+        if (node->rhs->type->ptr_to->ty == INT) {
+          printf("  imul rax, 4\n");
+        } else {
+          printf("  imul rax, 8\n");
+        }
+      }
+    }
     printf("  sub rax, rdi\n");
     break;
   case ND_MUL:
