@@ -78,5 +78,12 @@ assert 1  "int main() { int a[1]; a[0] = 1; return a[0]; }"
 assert 6  "int x; int y[20]; int *z; int main() { int z; x = 1; y[5] = 2; z = 3; return x + y[5] + z; }"
 assert 3  "int main(){ char x[3]; x[0] = -1; x[1] = 2; int y; y = 4; return x[0] + y; }"
 assert 0  "int main(){ char x[1]; x[0] = 128; print(x[0]); return 0; }" "./build/test.o"
+assert 72 '
+int main() {
+    char *s;
+    s = "Hello, world!";
+    printf("%s", s);
+    return s[0];
+}'
 
 echo OK

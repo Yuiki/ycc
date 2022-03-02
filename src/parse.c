@@ -9,6 +9,8 @@
 // local vars
 LVar *locals;
 
+Str *strs;
+
 Token *token;
 
 Node *globals[100];
@@ -157,6 +159,21 @@ Node *create_var(Token *tok, Type *type) {
   return node;
 }
 
+int create_str(char *value, int len) {
+  Str *str = calloc(1, sizeof(Str));
+  str->next = strs;
+  str->value = value;
+  str->len = len;
+  if (strs) {
+    str->index = strs->index + 1;
+  } else {
+    str->index = 0;
+  }
+  strs = str;
+
+  return str->index;
+}
+
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -237,6 +254,20 @@ Node *primary() {
         error_at(token->str, "未定義の識別子です");
       }
     }
+  }
+
+  if (token->kind == TK_STR_LIT) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_STR;
+    node->type = new_type(ARRAY);
+    node->type->array_size = token->len;
+    node->type->ptr_to = new_type(CHAR);
+
+    node->index = create_str(token->str, token->len);
+
+    token = token->next;
+
+    return node;
   }
 
   return new_node_num(expect_number());

@@ -24,6 +24,7 @@ typedef enum {
   ND_DEREF,      // *
   ND_NOP,        // no-op
   ND_GVAR_DECLA, // global variable declaration
+  ND_STR,        // string
 } NodeKind;
 
 typedef struct Type Type;
@@ -44,6 +45,15 @@ struct LVar {
   int len;    // len of name
   int offset; // offset from RBP
   Type *type; // use if kind = ND_LVAR
+};
+
+typedef struct Str Str;
+
+struct Str {
+  Str *next; // next str or NULL
+  char *value;
+  int len; // len of value
+  int index;
 };
 
 typedef struct Node Node;
@@ -80,6 +90,8 @@ struct Node {
 
   char *name;   // var name if kind = ND_GVAR, ND_GVAR_DECRA
   int name_len; // var name len if kind = ND_GVAR, ND_GVAR_DECRA
+
+  int index; // if kind = ND_STR
 };
 
 typedef enum {
@@ -92,9 +104,10 @@ typedef enum {
   TK_ELSE,
   TK_WHILE,
   TK_FOR,
-  TK_INT,    // int
-  TK_CHAR,   // char
-  TK_SIZEOF, // sizeof
+  TK_INT,     // int
+  TK_CHAR,    // char
+  TK_SIZEOF,  // sizeof
+  TK_STR_LIT, // string literal
 } TokenKind;
 
 typedef struct Token Token;
@@ -106,6 +119,8 @@ struct Token {
   char *str; // token string
   int len;   // len of token
 };
+
+extern Str *strs;
 
 // current token
 extern Token *token;

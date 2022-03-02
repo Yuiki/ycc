@@ -105,6 +105,22 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if (*p == '\"') {
+      cur = new_token(TK_STR_LIT, cur, p);
+      cur->val = strtol(p, &p, 10);
+
+      char *start = p;
+      p++;
+
+      while (*p != '\"') {
+        p++;
+      }
+
+      p++;
+      cur->len = p - start;
+      continue;
+    }
+
     char *start = p;
     while (is_alnum(*p)) {
       p++;

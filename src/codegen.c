@@ -228,6 +228,11 @@ void gen(Node *node) {
     printf("  .comm %.*s,%d,16\n", node->name_len, node->name, size);
     return;
   }
+  case ND_STR: {
+    printf("  lea rax, .LC%d[rip]\n", node->index);
+    printf("  push rax\n");
+    return;
+  }
   default:
     break;
   }
