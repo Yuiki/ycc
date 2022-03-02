@@ -12,16 +12,18 @@ typedef enum {
   ND_LE,     // <=
   ND_ASSIGN, // =
   ND_LVAR,   // local variable
+  ND_GVAR,   // global variable
   ND_RETURN, // return
   ND_IF,
   ND_WHILE,
   ND_FOR,
-  ND_BLOCK, // {}
-  ND_CALL,  // function call
-  ND_FUNC,  // function declaration
-  ND_ADDR,  // &
-  ND_DEREF, // *
-  ND_NOP,   // no-op
+  ND_BLOCK,      // {}
+  ND_CALL,       // function call
+  ND_FUNC,       // function declaration
+  ND_ADDR,       // &
+  ND_DEREF,      // *
+  ND_NOP,        // no-op
+  ND_GVAR_DECLA, // global variable declaration
 } NodeKind;
 
 typedef struct Type Type;
@@ -75,6 +77,9 @@ struct Node {
   Type *type; // if kind = ND_LVAR
 
   LVar *locals; // if kind = ND_FUNC
+
+  char *name;   // var name if kind = ND_GVAR, ND_GVAR_DECRA
+  int name_len; // var name len if kind = ND_GVAR, ND_GVAR_DECRA
 };
 
 typedef enum {

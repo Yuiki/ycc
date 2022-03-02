@@ -4,14 +4,19 @@
 
 int label_cnt = 0;
 
-void gen_lval(Node *node) {
-  if (node->kind != ND_LVAR) {
+void gen_val(Node *node) {
+  if (node->kind != ND_LVAR && node->kind != ND_GVAR) {
     error("代入の左辺値が変数ではありません");
   }
 
-  printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", node->offset);
-  printf("  push rax\n");
+  if (node->kind == ND_LVAR) {
+    printf("  mov rax, rbp\n");
+    printf("  sub rax, %d\n", node->offset);
+    printf("  push rax\n");
+  } else {
+    printf("  lea rax, %.*s[rip]\n", node->name_len, node->name);
+    printf("  push rax\n");
+  }
 }
 
 int calc_stack_size(LVar *locals) {
@@ -26,6 +31,16 @@ int calc_stack_size(LVar *locals) {
   return size;
 }
 
+int calc_global_size(Type *type) {
+  if (type->ty == INT) {
+    return 4;
+  } else if (type->ty == PTR) { // pointer
+    return 8;
+  } else { // arr
+    return type->array_size * calc_global_size(type->ptr_to);
+  }
+}
+
 void gen(Node *node) {
   switch (node->kind) {
   case ND_NUM:
@@ -35,7 +50,7 @@ void gen(Node *node) {
     if (node->lhs->kind == ND_DEREF) {
       gen(node->lhs->lhs);
     } else {
-      gen_lval(node->lhs);
+      gen_val(node->lhs);
     }
     gen(node->rhs);
 
@@ -45,7 +60,7 @@ void gen(Node *node) {
     printf("  push rdi\n");
     return;
   case ND_LVAR:
-    gen_lval(node);
+    gen_val(node);
     if (node->type->ty != ARRAY) {
       printf("  pop rax\n");
       printf("  mov rax, [rax]\n");
@@ -143,7 +158,7 @@ void gen(Node *node) {
     Node *param = node->params;
     // TODO: support >6 params
     for (int i = 0; param != NULL && i < 6; i++) {
-      gen_lval(param);
+      gen_val(param);
       if (i == 0) {
         printf("  push rdi\n");
       } else if (i == 1) {
@@ -176,7 +191,7 @@ void gen(Node *node) {
     return;
   }
   case ND_ADDR:
-    gen_lval(node->lhs);
+    gen_val(node->lhs);
     return;
   case ND_DEREF:
     gen(node->lhs);
@@ -186,6 +201,21 @@ void gen(Node *node) {
     return;
   case ND_NOP:
     return;
+  case ND_GVAR: {
+    gen_val(node);
+    if (node->type->ty != ARRAY) {
+      printf("  pop rax\n");
+      printf("  mov rax, [rax]\n");
+      printf("  push rax\n");
+    }
+    return;
+  }
+  case ND_GVAR_DECLA: {
+    int size = calc_global_size(node->type);
+    // TODO: fix alignment
+    printf("  .comm %.*s,%d,16\n", node->name_len, node->name, size);
+    return;
+  }
   default:
     break;
   }

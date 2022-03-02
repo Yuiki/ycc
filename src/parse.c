@@ -104,6 +104,17 @@ Node *new_node_num(int val) {
   return node;
 }
 
+Type *find_gvar(Token *tok) {
+  for (int i = 0; globals[i]; i++) {
+    Node *global = globals[i];
+    if (global->kind == ND_GVAR_DECLA && global->name_len == tok->len &&
+        !memcmp(tok->str, global->name, global->name_len)) {
+      return global->type;
+    }
+  }
+  return false;
+}
+
 LVar *find_lvar(Token *tok) {
   for (LVar *var = locals; var; var = var->next) {
     if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
@@ -175,11 +186,34 @@ Node *primary() {
       return node;
     } else { // var
       Node *node = calloc(1, sizeof(Node));
-      node->kind = ND_LVAR;
       LVar *lvar = find_lvar(tok);
       if (lvar) {
+        node->kind = ND_LVAR;
+
         node->offset = lvar->offset;
         node->type = lvar->type;
+
+        if (consume("[")) {
+          Node *add = new_node(ND_ADD, node, expr());
+
+          Node *deref = calloc(1, sizeof(Node));
+          deref->kind = ND_DEREF;
+          deref->lhs = add;
+          deref->type = new_type(INT);
+
+          expect("]");
+
+          return deref;
+        }
+        return node;
+      }
+
+      Type *type = find_gvar(tok);
+      if (type) {
+        node->kind = ND_GVAR;
+        node->name = tok->str;
+        node->name_len = tok->len;
+        node->type = type;
 
         if (consume("[")) {
           Node *add = new_node(ND_ADD, node, expr());
@@ -446,10 +480,29 @@ Node *stmt() {
   return node;
 }
 
-Node *function() {
-  Token *ident;
-  Type *type = type_ident(&ident);
+Node *global_var(Token *ident, Type *type) {
+  if (consume("[")) {
+    Type *new_ty = new_type(ARRAY);
+    new_ty->array_size = expect_number();
+    expect("]");
 
+    new_ty->ptr_to = type;
+    type = new_ty;
+  }
+
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = ND_GVAR_DECLA;
+  node->type = type;
+
+  node->name = ident->str;
+  node->name_len = ident->len;
+
+  expect(";");
+
+  return node;
+}
+
+Node *function(Token *ident) {
   locals = NULL;
 
   expect("(");
@@ -496,10 +549,21 @@ Node *function() {
   return node;
 }
 
+Node *global() {
+  Token *ident;
+  Type *type = type_ident(&ident);
+
+  if (is_next("(")) { // function
+    return function(ident);
+  } else { // global var
+    return global_var(ident, type);
+  }
+}
+
 void program() {
   int i = 0;
   while (!at_eof()) {
-    globals[i++] = function();
+    globals[i++] = global();
   }
   globals[i] = NULL;
 }
