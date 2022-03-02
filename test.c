@@ -17,3 +17,5 @@ int **alloc4(int **p, int a, int b, int c, int d) {
   (*p)[3] = d;
   return p;
 }
+
+void print(int c) { printf("%d\n", c); }

@@ -79,9 +79,8 @@ Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   node->lhs = lhs;
   node->rhs = rhs;
 
-  if (lhs->type->ty == INT && rhs->type->ty == INT) {
-    node->type = new_type(INT);
-  } else { // pointer
+  if (lhs->type->ty == PTR || rhs->type->ty == PTR || lhs->type->ty == ARRAY ||
+      rhs->type->ty == ARRAY) {
     Type *new_ty = new_type(PTR);
     Type *ptr_to;
     if (lhs->type->ptr_to != NULL) {
@@ -91,6 +90,12 @@ Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
     }
     new_ty->ptr_to = ptr_to;
     node->type = new_ty;
+  } else { // int or char
+    if (lhs->type->ty == PTR || lhs->type->ty == ARRAY) {
+      node->type = new_type(rhs->type->ty);
+    } else {
+      node->type = new_type(lhs->type->ty);
+    }
   }
 
   return node;
@@ -199,7 +204,7 @@ Node *primary() {
           Node *deref = calloc(1, sizeof(Node));
           deref->kind = ND_DEREF;
           deref->lhs = add;
-          deref->type = new_type(INT);
+          deref->type = new_type(node->type->ty);
 
           expect("]");
 
@@ -221,7 +226,7 @@ Node *primary() {
           Node *deref = calloc(1, sizeof(Node));
           deref->kind = ND_DEREF;
           deref->lhs = add;
-          deref->type = new_type(INT);
+          deref->type = new_type(node->type->ty);
 
           expect("]");
 
@@ -237,18 +242,22 @@ Node *primary() {
   return new_node_num(expect_number());
 }
 
+int byte_of(TypeKind type) {
+  if (type == CHAR) {
+    return 1;
+  } else if (type == INT) {
+    return 4;
+  } else { // pointer
+    return 8;
+  }
+}
+
 Node *unary() {
   if (token->kind == TK_SIZEOF) {
     token = token->next;
 
     Node *child = unary();
-    int val;
-    if (child->type->ty == INT) {
-      val = 4;
-    } else { // pointer
-      val = 8;
-    }
-    return new_node_num(val);
+    return new_node_num(byte_of(child->type->ty));
   }
   if (consume("*")) {
     Node *node = calloc(1, sizeof(Node));
@@ -366,20 +375,39 @@ Node *block() {
   return node;
 }
 
-Type *type_ident(Token **ident) {
-  if (token->kind != TK_INT) {
-    error_at(token->str, "型がintではありません");
+TypeKind type_of(Token *token) {
+  if (token->kind == TK_CHAR) {
+    return CHAR;
+  }
+  if (token->kind == TK_INT) {
+    return INT;
+  }
+  return -1;
+}
+
+bool is_type(Token *token) { return type_of(token) != -1; }
+
+Type *expect_type() {
+  TypeKind ty_kind = type_of(token);
+  if (ty_kind == -1) {
+    error_at(token->str, "型が未定義です");
   }
   token = token->next;
 
   Type *type = calloc(1, sizeof(Type));
-  type->ty = INT;
+  type->ty = ty_kind;
   while (consume("*")) {
     Type *new_type = calloc(1, sizeof(Type));
     new_type->ptr_to = type;
     new_type->ty = PTR;
     type = new_type;
   }
+
+  return type;
+}
+
+Type *type_ident(Token **ident) {
+  Type *type = expect_type();
 
   *ident = consume_ident();
   if (*ident == NULL) {
@@ -470,7 +498,7 @@ Node *stmt() {
     node->then = stmt();
   } else if (is_next("{")) {
     node = block();
-  } else if (token->kind == TK_INT) { // declaration
+  } else if (is_type(token)) { // declaration
     node = var_decla();
   } else {
     node = expr();
@@ -514,19 +542,7 @@ Node *function(Token *ident) {
 
   Node *head = NULL;
   while (!consume(")")) {
-    if (token->kind != TK_INT) {
-      error_at(token->str, "関数のパラメータの型がintではありません");
-    }
-    token = token->next;
-
-    Type *type = calloc(1, sizeof(Type));
-    type->ty = INT;
-    while (consume("*")) {
-      Type *new_type = calloc(1, sizeof(Type));
-      new_type->ty = PTR;
-      new_type->ptr_to = type;
-      type = new_type;
-    }
+    Type *type = expect_type();
 
     Token *param = consume_ident();
     if (head == NULL) {

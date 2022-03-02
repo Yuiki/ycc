@@ -91,6 +91,10 @@ Token *tokenize(char *p) {
       continue;
     }
 
+    if ((tokenize_kw(&p, &cur, "char", TK_CHAR))) {
+      continue;
+    }
+
     if ((tokenize_kw(&p, &cur, "sizeof", TK_SIZEOF))) {
       continue;
     }

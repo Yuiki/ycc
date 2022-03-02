@@ -31,8 +31,20 @@ int calc_stack_size(LVar *locals) {
   return size;
 }
 
+int calc_offset(Type *type) {
+  if (type->ty == CHAR) {
+    return 1;
+  } else if (type->ty == INT) {
+    return 4;
+  } else { // pointer or array
+    return 8;
+  }
+}
+
 int calc_global_size(Type *type) {
-  if (type->ty == INT) {
+  if (type->ty == CHAR) {
+    return 1;
+  } else if (type->ty == INT) {
     return 4;
   } else if (type->ty == PTR) { // pointer
     return 8;
@@ -230,20 +242,14 @@ void gen(Node *node) {
   case ND_ADD:
     if (node->lhs->kind == ND_LVAR) {
       if (node->lhs->type->ty == PTR || node->lhs->type->ty == ARRAY) {
-        if (node->lhs->type->ptr_to->ty == INT) {
-          printf("  imul rdi, 4\n");
-        } else {
-          printf("  imul rdi, 8\n");
-        }
+        int offset = calc_offset(node->lhs->type->ptr_to);
+        printf("  imul rdi, %d\n", offset);
       }
     }
     if (node->rhs->kind == ND_LVAR) {
       if (node->rhs->type->ty == PTR || node->rhs->type->ty == ARRAY) {
-        if (node->rhs->type->ptr_to->ty == INT) {
-          printf("  imul rax, 4\n");
-        } else {
-          printf("  imul rax, 8\n");
-        }
+        int offset = calc_offset(node->rhs->type->ptr_to);
+        printf("  imul rax, %d\n", offset);
       }
     }
     printf("  add rax, rdi\n");
@@ -251,20 +257,14 @@ void gen(Node *node) {
   case ND_SUB:
     if (node->lhs->kind == ND_LVAR) {
       if (node->lhs->type->ty == PTR || node->lhs->type->ty == ARRAY) {
-        if (node->lhs->type->ptr_to->ty == INT) {
-          printf("  imul rdi, 4\n");
-        } else {
-          printf("  imul rdi, 8\n");
-        }
+        int offset = calc_offset(node->lhs->type->ptr_to);
+        printf("  imul rdi, %d\n", offset);
       }
     }
     if (node->rhs->kind == ND_LVAR) {
       if (node->rhs->type->ty == PTR || node->rhs->type->ty == ARRAY) {
-        if (node->rhs->type->ptr_to->ty == INT) {
-          printf("  imul rax, 4\n");
-        } else {
-          printf("  imul rax, 8\n");
-        }
+        int offset = calc_offset(node->rhs->type->ptr_to);
+        printf("  imul rax, %d\n", offset);
       }
     }
     printf("  sub rax, rdi\n");
