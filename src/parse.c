@@ -146,10 +146,11 @@ Node *create_var(Token *tok, Type *type) {
     lvar->next = locals;
     lvar->name = tok->str;
     lvar->len = tok->len;
+    int diff = calc_offset(type);
     if (locals) {
-      lvar->offset = locals->offset + 8;
+      lvar->offset = locals->offset + diff;
     } else {
-      lvar->offset = 8;
+      lvar->offset = diff;
     }
     node->offset = lvar->offset;
     locals = lvar;
@@ -221,7 +222,7 @@ Node *primary() {
           Node *deref = calloc(1, sizeof(Node));
           deref->kind = ND_DEREF;
           deref->lhs = add;
-          deref->type = new_type(node->type->ty);
+          deref->type = new_type(add->type->ptr_to->ty);
 
           expect("]");
 

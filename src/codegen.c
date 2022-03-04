@@ -1,8 +1,11 @@
 #include "ycc.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 int label_cnt = 0;
+
+int align_cnt = 0;
 
 void gen_val(Node *node) {
   if (node->kind != ND_LVAR && node->kind != ND_GVAR) {
@@ -19,38 +22,48 @@ void gen_val(Node *node) {
   }
 }
 
-int calc_stack_size(LVar *locals) {
-  int size = 0;
-  for (LVar *local = locals; local; local = local->next) {
-    int len = 1;
-    if (local->type->ty == ARRAY) {
-      len = local->type->array_size;
-    }
-    size += len * 8;
-  }
-  return size;
-}
-
 int calc_offset(Type *type) {
   if (type->ty == CHAR) {
     return 1;
   } else if (type->ty == INT) {
     return 4;
-  } else { // pointer or array
+  } else if (type->ty == PTR) {
     return 8;
+  } else { // array
+    return type->array_size * calc_offset(type->ptr_to);
   }
 }
 
-int calc_global_size(Type *type) {
-  if (type->ty == CHAR) {
-    return 1;
-  } else if (type->ty == INT) {
-    return 4;
-  } else if (type->ty == PTR) { // pointer
-    return 8;
-  } else { // arr
-    return type->array_size * calc_global_size(type->ptr_to);
+int calc_stack_size(LVar *locals) {
+  int size = 0;
+  for (LVar *local = locals; local; local = local->next) {
+    size += calc_offset(local->type);
   }
+  return size + ((16 - (size % 16)) % 16);
+}
+
+void store(TypeKind type) {
+  printf("  pop rdi\n");
+  printf("  pop rax\n");
+  if (type == CHAR) {
+    printf("  mov [rax], dil\n");
+  } else if (type == INT) {
+    printf("  mov [rax], edi\n");
+  } else {
+    printf("  mov [rax], rdi\n");
+  }
+}
+
+void load(TypeKind type) {
+  printf("  pop rax\n");
+  if (type == CHAR) {
+    printf("  movsx rax, BYTE PTR [rax]\n");
+  } else if (type == INT) {
+    printf("  mov eax, [rax]\n");
+  } else {
+    printf("  mov rax, [rax]\n");
+  }
+  printf("  push rax\n");
 }
 
 void gen(Node *node) {
@@ -66,17 +79,13 @@ void gen(Node *node) {
     }
     gen(node->rhs);
 
-    printf("  pop rdi\n");
-    printf("  pop rax\n");
-    printf("  mov [rax], rdi\n");
+    store(node->lhs->type->ty);
     printf("  push rdi\n");
     return;
   case ND_LVAR:
     gen_val(node);
     if (node->type->ty != ARRAY) {
-      printf("  pop rax\n");
-      printf("  mov rax, [rax]\n");
-      printf("  push rax\n");
+      load(node->type->ty);
     }
     return;
   case ND_RETURN:
@@ -136,25 +145,39 @@ void gen(Node *node) {
   case ND_CALL: {
     Node *arg = node->args;
     // TODO: support >6 args
-    for (int i = 0; arg != NULL && i < 6; i++) {
+    int i;
+    for (i = 0; arg != NULL && i < 6; i++) {
       gen(arg);
-      if (i == 0) {
-        printf("  pop rdi\n");
-      } else if (i == 1) {
-        printf("  pop rsi\n");
-      } else if (i == 2) {
-        printf("  pop rdx\n");
-      } else if (i == 3) {
-        printf("  pop rcx\n");
-      } else if (i == 4) {
-        printf("  pop r8\n");
-      } else if (i == 5) {
-        printf("  pop r9\n");
-      }
       arg = arg->next;
     }
-    // TODO: support /16 alignment
+    for (int j = i - 1; j >= 0; j--) {
+      if (j == 0) {
+        printf("  pop rdi\n");
+      } else if (j == 1) {
+        printf("  pop rsi\n");
+      } else if (j == 2) {
+        printf("  pop rdx\n");
+      } else if (j == 3) {
+        printf("  pop rcx\n");
+      } else if (j == 4) {
+        printf("  pop r8\n");
+      } else if (j == 5) {
+        printf("  pop r9\n");
+      }
+    }
+
+    int label = align_cnt++;
+    printf("  mov rax, rsp\n");
+    printf("  and rax, 15\n");
+    printf("  jne .Abegin%d\n", label);
     printf("  call %.*s\n", node->func_len, node->func);
+    printf("  jmp .Aend%d\n", label);
+    printf(".Abegin%d:\n", label);
+    printf("  sub rsp, 8\n");
+    printf("  call %.*s\n", node->func_len, node->func);
+    printf("  add rsp, 8\n");
+    printf(".Aend%d:\n", label);
+
     printf("  push rax\n");
     return;
   }
@@ -185,9 +208,7 @@ void gen(Node *node) {
         printf("  push r9\n");
       }
 
-      printf("  pop rdi\n");
-      printf("  pop rax\n");
-      printf("  mov [rax], rdi\n");
+      store(param->type->ty);
 
       param = param->next;
     }
@@ -207,23 +228,19 @@ void gen(Node *node) {
     return;
   case ND_DEREF:
     gen(node->lhs);
-    printf("  pop rax\n");
-    printf("  mov rax, [rax]\n");
-    printf("  push rax\n");
+    load(node->type->ty);
     return;
   case ND_NOP:
     return;
   case ND_GVAR: {
     gen_val(node);
     if (node->type->ty != ARRAY) {
-      printf("  pop rax\n");
-      printf("  mov rax, [rax]\n");
-      printf("  push rax\n");
+      load(node->type->ty);
     }
     return;
   }
   case ND_GVAR_DECLA: {
-    int size = calc_global_size(node->type);
+    int size = calc_offset(node->type);
     // TODO: fix alignment
     printf("  .comm %.*s,%d,16\n", node->name_len, node->name, size);
     return;

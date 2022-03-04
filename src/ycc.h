@@ -131,6 +131,8 @@ extern char *user_input;
 // TODO: support >100
 extern Node *globals[100];
 
+extern char *filename;
+
 Token *tokenize(char *p);
 
 void program();
@@ -140,3 +142,7 @@ void gen(Node *node);
 void error(char *fmt, ...);
 
 void error_at(char *loc, char *fmt, ...);
+
+char *read_file(char *path);
+
+int calc_offset(Type *type);
