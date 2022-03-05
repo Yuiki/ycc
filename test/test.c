@@ -3,12 +3,12 @@ int foo() { return 0; }
 int echo(int x) { return x; }
 
 int bar(int a, int b, int c, int d, int e, int f) {
-  printf("%d", a + b + c + d + e + f);
+  printf("%d\n", a + b + c + d + e + f);
   return 0;
 }
 
 int print(char c) {
-  printf("%c", c);
+  printf("%c\n", c);
   return 0;
 }
 
@@ -25,15 +25,15 @@ int **alloc4(int **p, int a, int b, int c, int d) {
 
 int assert(int actual, int expected) {
   if (actual != expected) {
-    printf("\n%d expected, but got %d\n", expected, actual);
+    printf("%d expected, but got %d\n", expected, actual);
     exit(1);
-  } else {
-    printf("#");
   }
   return 0;
 }
 
 int arith() {
+  printf("test: arith\n");
+
   assert(0, 0);
   assert(42, 42);
   assert(5 + 20 - 4, 21);
@@ -47,6 +47,8 @@ int arith() {
 }
 
 int cmp() {
+  printf("test: cmp\n");
+
   assert(1 == 1, 1);
   assert(1 == 2, 0);
   assert(1 != 1, 0);
@@ -65,6 +67,8 @@ int cmp() {
 }
 
 int stmt() {
+  printf("test: stmt\n");
+
   1 + 1;
   return 2 + 2;
 }
@@ -104,6 +108,8 @@ int var4() {
 }
 
 int vars() {
+  printf("test: vars\n");
+
   var1();
   var2();
   var3();
@@ -141,6 +147,8 @@ int if3() {
 }
 
 int ifs() {
+  printf("test: ifs\n");
+
   if1();
   if2();
   if3();
@@ -157,6 +165,8 @@ int while1() {
 }
 
 int whiles() {
+  printf("test: whiles\n");
+
   while1();
   return 0;
 }
@@ -186,6 +196,8 @@ int for2() {
 }
 
 int fors() {
+  printf("test: fors\n");
+
   for1();
   for2();
   return 0;
@@ -238,6 +250,8 @@ int call5() {
 }
 
 int calls() {
+  printf("test: calls\n");
+
   call1();
   call2();
   call3();
@@ -278,6 +292,8 @@ int ref3() {
 }
 
 int refs() {
+  printf("test: refs\n");
+
   ref1();
   ref2();
   ref3();
@@ -321,6 +337,8 @@ int ptr4() {
 }
 
 int ptrs() {
+  printf("test: ptrs\n");
+
   ptr1();
   ptr2();
   ptr3();
@@ -369,6 +387,8 @@ int sizeof7() {
 }
 
 int sizeofs() {
+  printf("test: sizeofs\n");
+
   sizeof1();
   sizeof2();
   sizeof3();
@@ -402,6 +422,8 @@ int arr3() {
 }
 
 int arrs() {
+  printf("test: arrs\n");
+
   arr1();
   arr2();
   arr3();
@@ -413,6 +435,8 @@ int global_y[20];
 int *global_z;
 
 int global() {
+  printf("test: global\n");
+
   int z;
   global_x = 1;
   global_y[5] = 2;
@@ -438,12 +462,16 @@ int char2() {
 }
 
 int chars() {
+  printf("test: chars\n");
+
   char1();
   char2();
   return 0;
 }
 
 int strlit() {
+  printf("test: strlit\n");
+
   char *s;
   s = "Hello, world!";
   printf("%s\n", s);

@@ -192,7 +192,9 @@ void gen_if(Node *node) {
   gen(node->then);
   printf("  jmp .Lend%d\n", idx);
   printf(".Lelse%d:\n", idx);
-  gen(node->els);
+  if (node->els) {
+    gen(node->els);
+  }
   printf(".Lend%d:\n", idx);
 }
 
