@@ -1,7 +1,5 @@
 #include "ycc.h"
-#include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 int label_idx = 0;
 

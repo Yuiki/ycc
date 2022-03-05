@@ -1,6 +1,4 @@
 #include "ycc.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 int size_of(Type *type) {
   switch (type->ty) {
