@@ -1,38 +1,38 @@
 #include <stddef.h>
 
 typedef enum {
-  ND_ADD,    // +
-  ND_SUB,    // -
-  ND_MUL,    // *
-  ND_DIV,    // /
-  ND_NUM,    // number
-  ND_EQ,     // ==
-  ND_NE,     // !=
-  ND_LT,     // <
-  ND_LE,     // <=
-  ND_ASSIGN, // =
-  ND_LVAR,   // local variable
-  ND_GVAR,   // global variable
-  ND_RETURN, // return
-  ND_IF,
-  ND_WHILE,
-  ND_FOR,
-  ND_BLOCK,      // {}
-  ND_CALL,       // function call
-  ND_FUNC,       // function declaration
+  ND_ADD,        // +
+  ND_SUB,        // -
+  ND_MUL,        // *
+  ND_DIV,        // /
+  ND_NUM,        // number
+  ND_EQ,         // ==
+  ND_NE,         // !=
+  ND_LT,         // <
+  ND_LE,         // <=
+  ND_GVAR_DECLA, // global variable declaration
+  ND_GVAR,       // global variable
+  ND_LVAR,       // local variable
   ND_ADDR,       // &
   ND_DEREF,      // *
-  ND_NOP,        // no-op
-  ND_GVAR_DECLA, // global variable declaration
+  ND_CALL,       // function call
+  ND_FUNC,       // function declaration
   ND_STR,        // string
+  ND_ASSIGN,     // =
+  ND_RETURN,     // return
+  ND_IF,         // if
+  ND_WHILE,      // while
+  ND_FOR,        // for
+  ND_BLOCK,      // {}
+  ND_NOP,        // no-op
 } NodeKind;
-
-typedef struct Type Type;
 
 typedef enum { CHAR, INT, PTR, ARRAY } TypeKind;
 
+typedef struct Type Type;
+
 struct Type {
-  TypeKind ty;
+  TypeKind kind;
   struct Type *ptr_to; // pointer if ty = PTR
   size_t array_size;
 };
@@ -44,7 +44,7 @@ struct LVar {
   char *name;
   int len;    // len of name
   int offset; // offset from RBP
-  Type *type; // use if kind = ND_LVAR
+  Type *type;
 };
 
 typedef struct Str Str;
@@ -73,8 +73,9 @@ struct Node {
 
   Node *body; // if kind = ND_BLOCK
 
-  int val;    // the number if kind = ND_NUM
-  int offset; // use if kind = ND_LVAR
+  int val; // the number if kind = ND_NUM
+
+  int offset; // if kind = ND_LVAR
 
   char *func;   // function name if kind = ND_CALL, ND_FUNC
   int func_len; // func name len if kind = ND_CALL, ND_FUNC
@@ -84,13 +85,12 @@ struct Node {
   Node *block;  // if kind = ND_FUNC
   Node *params; // if kind = ND_FUNC
 
-  Type *type; // if kind = ND_LVAR
+  Type *type;
 
   LVar *locals; // if kind = ND_FUNC
 
-  char *name; // var name if kind = ND_GVAR, ND_GVAR_DECRA
-  // TODO: remove
-  int name_len; // var name len if kind = ND_GVAR, ND_GVAR_DECRA
+  char *name;   // var name if kind = ND_GVAR, ND_GVAR_DECLA
+  int name_len; // var name len if kind = ND_GVAR, ND_GVAR_DECLA
 
   int index; // if kind = ND_STR
 };
@@ -99,7 +99,6 @@ typedef enum {
   TK_RESERVED, // symbol
   TK_IDENT,    // identifier
   TK_NUM,
-  TK_EOF,
   TK_RETURN, // return
   TK_IF,
   TK_ELSE,
@@ -109,6 +108,7 @@ typedef enum {
   TK_CHAR,    // char
   TK_SIZEOF,  // sizeof
   TK_STR_LIT, // string literal
+  TK_EOF,
 } TokenKind;
 
 typedef struct Token Token;
@@ -121,30 +121,41 @@ struct Token {
   int len;   // len of token
 };
 
-extern Str *strs;
-
-// current token
-extern Token *token;
+extern char *filename;
 
 // input program
 extern char *user_input;
 
+// current token
+extern Token *token;
+
+extern Str *strs;
+
 // TODO: support >100
 extern Node *globals[100];
 
-extern char *filename;
+// tokenize.c
 
 Token *tokenize(char *p);
 
+// parse.c
 void program();
 
+// codegen.c
+
 void gen_program();
+
+// error.c
 
 void error(char *fmt, ...);
 
 void error_at(char *loc, char *fmt, ...);
 
+// file.c
+
 char *read_file(char *path);
+
+// size.c
 
 int size_of(Type *type);
 

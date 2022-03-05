@@ -1,7 +1,7 @@
 #include "ycc.h"
 
 int size_of(Type *type) {
-  switch (type->ty) {
+  switch (type->kind) {
   case CHAR:
     return 1;
   case INT:
@@ -11,7 +11,7 @@ int size_of(Type *type) {
   case ARRAY:
     return type->array_size * size_of(type->ptr_to);
   default:
-    error("illegal type [TypeKind: %d]\n", type->ty);
+    error("illegal type [TypeKind: %d]\n", type->kind);
     return -1; // not reachable
   }
 }

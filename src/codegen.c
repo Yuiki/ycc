@@ -65,8 +65,8 @@ void gen_gvar_decra(Node *node) {
 
 void gen_var(Node *node) {
   gen_val(node);
-  if (node->type->ty != ARRAY) {
-    load(node->type->ty);
+  if (node->type->kind != ARRAY) {
+    load(node->type->kind);
   }
 }
 
@@ -74,7 +74,7 @@ void gen_addr(Node *node) { gen_val(node->lhs); }
 
 void gen_deref(Node *node) {
   gen(node->lhs);
-  load(node->type->ty);
+  load(node->type->kind);
 }
 
 void gen_epilogue() {
@@ -111,7 +111,7 @@ void gen_func(Node *node) {
       printf("  push r9\n");
     }
 
-    store(param->type->ty);
+    store(param->type->kind);
   }
 
   gen(node->block);
@@ -172,7 +172,7 @@ void gen_assign(Node *node) {
 
   gen(node->rhs);
 
-  store(node->lhs->type->ty);
+  store(node->lhs->type->kind);
 
   printf("  push rdi\n");
 }
@@ -241,13 +241,15 @@ void gen_child(Node *node) {
 // add offset for add/sub if needed
 void gen_ptr_offset(Node *node) {
   Type *ltype = node->lhs->type;
-  if (node->lhs->kind == ND_LVAR && (ltype->ty == PTR || ltype->ty == ARRAY)) {
+  if (node->lhs->kind == ND_LVAR &&
+      (ltype->kind == PTR || ltype->kind == ARRAY)) {
     int offset = size_of(ltype->ptr_to);
     printf("  imul rdi, %d\n", offset);
   }
 
   Type *rtype = node->rhs->type;
-  if (node->rhs->kind == ND_LVAR && (rtype->ty == PTR || rtype->ty == ARRAY)) {
+  if (node->rhs->kind == ND_LVAR &&
+      (rtype->kind == PTR || rtype->kind == ARRAY)) {
     int offset = size_of(rtype->ptr_to);
     printf("  imul rax, %d\n", offset);
   }

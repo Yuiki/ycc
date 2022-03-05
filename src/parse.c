@@ -68,7 +68,7 @@ bool at_eof() { return token->kind == TK_EOF; }
 
 Type *new_type(TypeKind ty) {
   Type *type = calloc(1, sizeof(Type));
-  type->ty = ty;
+  type->kind = ty;
   return type;
 }
 
@@ -78,8 +78,8 @@ Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
   node->lhs = lhs;
   node->rhs = rhs;
 
-  if (lhs->type->ty == PTR || rhs->type->ty == PTR || lhs->type->ty == ARRAY ||
-      rhs->type->ty == ARRAY) {
+  if (lhs->type->kind == PTR || rhs->type->kind == PTR ||
+      lhs->type->kind == ARRAY || rhs->type->kind == ARRAY) {
     Type *new_ty = new_type(PTR);
     Type *ptr_to;
     if (lhs->type->ptr_to != NULL) {
@@ -90,10 +90,10 @@ Node *new_node(NodeKind kind, Node *lhs, Node *rhs) {
     new_ty->ptr_to = ptr_to;
     node->type = new_ty;
   } else { // int or char
-    if (lhs->type->ty == PTR || lhs->type->ty == ARRAY) {
-      node->type = new_type(rhs->type->ty);
+    if (lhs->type->kind == PTR || lhs->type->kind == ARRAY) {
+      node->type = new_type(rhs->type->kind);
     } else {
-      node->type = new_type(lhs->type->ty);
+      node->type = new_type(lhs->type->kind);
     }
   }
 
@@ -219,7 +219,7 @@ Node *primary() {
           Node *deref = calloc(1, sizeof(Node));
           deref->kind = ND_DEREF;
           deref->lhs = add;
-          deref->type = new_type(add->type->ptr_to->ty);
+          deref->type = new_type(add->type->ptr_to->kind);
 
           expect("]");
 
@@ -241,7 +241,7 @@ Node *primary() {
           Node *deref = calloc(1, sizeof(Node));
           deref->kind = ND_DEREF;
           deref->lhs = add;
-          deref->type = new_type(node->type->ty);
+          deref->type = new_type(node->type->kind);
 
           expect("]");
 
@@ -286,7 +286,7 @@ Node *unary() {
     token = token->next;
 
     Node *child = unary();
-    return new_node_num(byte_of(child->type->ty));
+    return new_node_num(byte_of(child->type->kind));
   }
   if (consume("*")) {
     Node *node = calloc(1, sizeof(Node));
@@ -424,11 +424,11 @@ Type *expect_type() {
   token = token->next;
 
   Type *type = calloc(1, sizeof(Type));
-  type->ty = ty_kind;
+  type->kind = ty_kind;
   while (consume("*")) {
     Type *new_type = calloc(1, sizeof(Type));
     new_type->ptr_to = type;
-    new_type->ty = PTR;
+    new_type->kind = PTR;
     type = new_type;
   }
 
