@@ -5,6 +5,8 @@
 
 int label_idx = 0;
 
+void gen();
+
 // store the first stack value into the second stack address
 void store(TypeKind type) {
   printf("  pop rdi\n");
@@ -402,5 +404,21 @@ void gen(Node *node) {
   default:
     fprintf(stderr, "illegal node [NodeKind: %d]\n", node->kind);
     exit(1);
+  }
+}
+
+void gen_program() {
+  printf(".intel_syntax noprefix\n");
+  printf(".globl main\n");
+
+  // gen strs
+  for (Str *str = strs; str; str = str->next) {
+    printf(".LC%d:\n", str->index);
+    printf("  .string %.*s\n", str->len, str->value);
+  }
+
+  // gen globals
+  for (int i = 0; globals[i]; i++) {
+    gen(globals[i]);
   }
 }

@@ -138,7 +138,7 @@ Token *tokenize(char *p);
 
 void program();
 
-void gen(Node *node);
+void gen_program();
 
 void error(char *fmt, ...);
 
