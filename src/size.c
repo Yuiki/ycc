@@ -13,8 +13,8 @@ int size_of(Type *type) {
   case ARRAY:
     return type->array_size * size_of(type->ptr_to);
   default:
-    fprintf(stderr, "illegal type [TypeKind: %d]\n", type->ty);
-    exit(1);
+    error("illegal type [TypeKind: %d]\n", type->ty);
+    return -1; // not reachable
   }
 }
 

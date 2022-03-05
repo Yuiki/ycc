@@ -402,8 +402,7 @@ void gen(Node *node) {
   case ND_NOP:
     return;
   default:
-    fprintf(stderr, "illegal node [NodeKind: %d]\n", node->kind);
-    exit(1);
+    error("illegal node [NodeKind: %d]\n", node->kind);
   }
 }
 
