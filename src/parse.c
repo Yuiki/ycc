@@ -146,7 +146,7 @@ Node *create_var(Token *tok, Type *type) {
     lvar->next = locals;
     lvar->name = tok->str;
     lvar->len = tok->len;
-    int diff = calc_offset(type);
+    int diff = size_of(type);
     if (locals) {
       lvar->offset = locals->offset + diff;
     } else {

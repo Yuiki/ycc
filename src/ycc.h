@@ -88,7 +88,8 @@ struct Node {
 
   LVar *locals; // if kind = ND_FUNC
 
-  char *name;   // var name if kind = ND_GVAR, ND_GVAR_DECRA
+  char *name; // var name if kind = ND_GVAR, ND_GVAR_DECRA
+  // TODO: remove
   int name_len; // var name len if kind = ND_GVAR, ND_GVAR_DECRA
 
   int index; // if kind = ND_STR
@@ -145,4 +146,6 @@ void error_at(char *loc, char *fmt, ...);
 
 char *read_file(char *path);
 
-int calc_offset(Type *type);
+int size_of(Type *type);
+
+int calc_stack_size(LVar *locals);

@@ -3,33 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int label_cnt = 0;
+int label_idx = 0;
 
-int align_cnt = 0;
-
-int calc_offset(Type *type) {
-  if (type->ty == CHAR) {
-    return 1;
-  } else if (type->ty == INT) {
-    return 4;
-  } else if (type->ty == PTR) {
-    return 8;
-  } else { // array
-    return type->array_size * calc_offset(type->ptr_to);
-  }
-}
-
-int calc_stack_size(LVar *locals) {
-  int size = 0;
-  for (LVar *local = locals; local; local = local->next) {
-    size += calc_offset(local->type);
-  }
-  return size + ((16 - (size % 16)) % 16);
-}
-
+// store the first stack value into the second stack address
 void store(TypeKind type) {
   printf("  pop rdi\n");
   printf("  pop rax\n");
+
   if (type == CHAR) {
     printf("  mov [rax], dil\n");
   } else if (type == INT) {
@@ -39,8 +19,10 @@ void store(TypeKind type) {
   }
 }
 
+// load from the stack top address and push it
 void load(TypeKind type) {
   printf("  pop rax\n");
+
   if (type == CHAR) {
     printf("  movsx rax, BYTE PTR [rax]\n");
   } else if (type == INT) {
@@ -48,19 +30,20 @@ void load(TypeKind type) {
   } else {
     printf("  mov rax, [rax]\n");
   }
+
   printf("  push rax\n");
 }
 
 void gen_val(Node *node) {
   if (node->kind != ND_LVAR && node->kind != ND_GVAR) {
-    error("代入の左辺値が変数ではありません");
+    error("node is not variable [NodeKind: %d]", node->kind);
   }
 
   if (node->kind == ND_LVAR) {
     printf("  mov rax, rbp\n");
     printf("  sub rax, %d\n", node->offset);
     printf("  push rax\n");
-  } else {
+  } else { // gvar
     printf("  lea rax, %.*s[rip]\n", node->name_len, node->name);
     printf("  push rax\n");
   }
@@ -70,23 +53,17 @@ void gen_num(Node *node) { printf("  push %d\n", node->val); }
 
 void gen_str(Node *node) {
   printf("  lea rax, .LC%d[rip]\n", node->index);
+
   printf("  push rax\n");
 }
 
-void gen_lvar(Node *node) {
-  gen_val(node);
-  if (node->type->ty != ARRAY) {
-    load(node->type->ty);
-  }
-}
-
 void gen_gvar_decra(Node *node) {
-  int size = calc_offset(node->type);
-  // TODO: fix alignment
+  int size = size_of(node->type);
+  // TODO: set alignment properly
   printf("  .comm %.*s,%d,16\n", node->name_len, node->name, size);
 }
 
-void gen_gvar(Node *node) {
+void gen_var(Node *node) {
   gen_val(node);
   if (node->type->ty != ARRAY) {
     load(node->type->ty);
@@ -100,6 +77,12 @@ void gen_deref(Node *node) {
   load(node->type->ty);
 }
 
+void gen_epilogue() {
+  printf("  mov rsp, rbp\n");
+  printf("  pop rbp\n");
+  printf("  ret\n");
+}
+
 void gen_func(Node *node) {
   printf("%.*s:\n", node->func_len, node->func);
 
@@ -109,10 +92,11 @@ void gen_func(Node *node) {
   int stack_size = calc_stack_size(node->locals);
   printf("  sub rsp, %d\n", stack_size);
 
-  Node *param = node->params;
   // TODO: support >6 params
-  for (int i = 0; param != NULL && i < 6; i++) {
+  Node *param = node->params;
+  for (int i = 0; param != NULL && i < 6; i++, param = param->next) {
     gen_val(param);
+
     if (i == 0) {
       printf("  push rdi\n");
     } else if (i == 1) {
@@ -128,55 +112,53 @@ void gen_func(Node *node) {
     }
 
     store(param->type->ty);
-
-    param = param->next;
   }
 
   gen(node->block);
+
   printf("  pop rax\n");
 
   // epilogue
   // TODO: remove
-  printf("  mov rsp, rbp\n");
-  printf("  pop rbp\n");
-  printf("  ret\n");
+  gen_epilogue();
 }
 
 void gen_call(Node *node) {
-  Node *arg = node->args;
   // TODO: support >6 args
-  int i;
-  for (i = 0; arg != NULL && i < 6; i++) {
+  int var_size = 0;
+  for (Node *arg = node->args; arg && var_size < 6;
+       arg = arg->next, var_size++) {
     gen(arg);
-    arg = arg->next;
   }
-  for (int j = i - 1; j >= 0; j--) {
-    if (j == 0) {
+
+  for (int i = var_size - 1; i >= 0; i--) {
+    if (i == 0) {
       printf("  pop rdi\n");
-    } else if (j == 1) {
+    } else if (i == 1) {
       printf("  pop rsi\n");
-    } else if (j == 2) {
+    } else if (i == 2) {
       printf("  pop rdx\n");
-    } else if (j == 3) {
+    } else if (i == 3) {
       printf("  pop rcx\n");
-    } else if (j == 4) {
+    } else if (i == 4) {
       printf("  pop r8\n");
-    } else if (j == 5) {
+    } else if (i == 5) {
       printf("  pop r9\n");
     }
   }
 
-  int label = align_cnt++;
+  // fix alignment
+  int idx = label_idx++;
   printf("  mov rax, rsp\n");
   printf("  and rax, 15\n");
-  printf("  jne .Abegin%d\n", label);
+  printf("  jne .Lbegin%d\n", idx);
   printf("  call %.*s\n", node->func_len, node->func);
-  printf("  jmp .Aend%d\n", label);
-  printf(".Abegin%d:\n", label);
+  printf("  jmp .Lend%d\n", idx);
+  printf(".Lbegin%d:\n", idx);
   printf("  sub rsp, 8\n");
   printf("  call %.*s\n", node->func_len, node->func);
   printf("  add rsp, 8\n");
-  printf(".Aend%d:\n", label);
+  printf(".Lend%d:\n", idx);
 
   printf("  push rax\n");
 }
@@ -187,67 +169,67 @@ void gen_assign(Node *node) {
   } else {
     gen_val(node->lhs);
   }
+
   gen(node->rhs);
 
   store(node->lhs->type->ty);
+
   printf("  push rdi\n");
 }
 
 void gen_return(Node *node) {
   gen(node->lhs);
   printf("  pop rax\n");
-  printf("  mov rsp, rbp\n");
-  printf("  pop rbp\n");
-  printf("  ret\n");
+  gen_epilogue();
 }
 
 void gen_if(Node *node) {
-  int label = label_cnt++;
+  int idx = label_idx++;
   gen(node->cond);
   printf("  pop rax\n");
   printf("  cmp rax, 0\n");
-  printf("  je .Lelse%d\n", label);
+  printf("  je .Lelse%d\n", idx);
   gen(node->then);
-  printf("  jmp .Lend%d\n", label);
-  printf(".Lelse%d:\n", label);
+  printf("  jmp .Lend%d\n", idx);
+  printf(".Lelse%d:\n", idx);
   gen(node->els);
-  printf(".Lend%d:\n", label);
+  printf(".Lend%d:\n", idx);
 }
 
 void gen_while(Node *node) {
-  int label = label_cnt++;
-  printf(".Lbegin%d:\n", label);
+  int idx = label_idx++;
+  printf(".Lbegin%d:\n", idx);
   gen(node->cond);
   printf("  pop rax\n");
   printf("  cmp rax, 0\n");
-  printf("  je .Lend%d\n", label);
+  printf("  je .Lend%d\n", idx);
   gen(node->then);
-  printf("  jmp .Lbegin%d\n", label);
-  printf(".Lend%d:\n", label);
+  printf("  jmp .Lbegin%d\n", idx);
+  printf(".Lend%d:\n", idx);
 }
 
 void gen_for(Node *node) {
-  int label = label_cnt++;
+  int idx = label_idx++;
   gen(node->init);
-  printf(".Lbegin%d:\n", label);
+  printf(".Lbegin%d:\n", idx);
   gen(node->cond);
   printf("  pop rax\n");
   printf("  cmp rax, 0\n");
-  printf("  je .Lend%d\n", label);
+  printf("  je .Lend%d\n", idx);
   gen(node->then);
   gen(node->step);
-  printf("  jmp .Lbegin%d\n", label);
-  printf(".Lend%d:\n", label);
+  printf("  jmp .Lbegin%d\n", idx);
+  printf(".Lend%d:\n", idx);
 }
 
 void gen_block(Node *node) {
-  Node *head = node->body;
-  while (head != NULL) {
+  for (Node *head = node->body; head != NULL; head = head->next) {
     gen(head);
-    head = head->next;
   }
 }
 
+// rdi = gen(rhs)
+// rax = gen(lhs)
 void gen_child(Node *node) {
   gen(node->lhs);
   gen(node->rhs);
@@ -256,21 +238,25 @@ void gen_child(Node *node) {
   printf("  pop rax\n");
 }
 
+// add offset for add/sub if needed
+void gen_ptr_offset(Node *node) {
+  Type *ltype = node->lhs->type;
+  if (node->lhs->kind == ND_LVAR && (ltype->ty == PTR || ltype->ty == ARRAY)) {
+    int offset = size_of(ltype->ptr_to);
+    printf("  imul rdi, %d\n", offset);
+  }
+
+  Type *rtype = node->rhs->type;
+  if (node->rhs->kind == ND_LVAR && (rtype->ty == PTR || rtype->ty == ARRAY)) {
+    int offset = size_of(rtype->ptr_to);
+    printf("  imul rax, %d\n", offset);
+  }
+}
+
 void gen_add(Node *node) {
   gen_child(node);
 
-  if (node->lhs->kind == ND_LVAR) {
-    if (node->lhs->type->ty == PTR || node->lhs->type->ty == ARRAY) {
-      int offset = calc_offset(node->lhs->type->ptr_to);
-      printf("  imul rdi, %d\n", offset);
-    }
-  }
-  if (node->rhs->kind == ND_LVAR) {
-    if (node->rhs->type->ty == PTR || node->rhs->type->ty == ARRAY) {
-      int offset = calc_offset(node->rhs->type->ptr_to);
-      printf("  imul rax, %d\n", offset);
-    }
-  }
+  gen_ptr_offset(node);
   printf("  add rax, rdi\n");
 
   printf("  push rax\n");
@@ -279,18 +265,7 @@ void gen_add(Node *node) {
 void gen_sub(Node *node) {
   gen_child(node);
 
-  if (node->lhs->kind == ND_LVAR) {
-    if (node->lhs->type->ty == PTR || node->lhs->type->ty == ARRAY) {
-      int offset = calc_offset(node->lhs->type->ptr_to);
-      printf("  imul rdi, %d\n", offset);
-    }
-  }
-  if (node->rhs->kind == ND_LVAR) {
-    if (node->rhs->type->ty == PTR || node->rhs->type->ty == ARRAY) {
-      int offset = calc_offset(node->rhs->type->ptr_to);
-      printf("  imul rax, %d\n", offset);
-    }
-  }
+  gen_ptr_offset(node);
   printf("  sub rax, rdi\n");
 
   printf("  push rax\n");
@@ -298,6 +273,7 @@ void gen_sub(Node *node) {
 
 void gen_mul(Node *node) {
   gen_child(node);
+
   printf("  imul rax, rdi\n");
 
   printf("  push rax\n");
@@ -360,14 +336,12 @@ void gen(Node *node) {
   case ND_STR:
     gen_str(node);
     return;
-  case ND_LVAR:
-    gen_lvar(node);
-    return;
   case ND_GVAR_DECLA:
     gen_gvar_decra(node);
     return;
   case ND_GVAR:
-    gen_gvar(node);
+  case ND_LVAR:
+    gen_var(node);
     return;
   case ND_ADDR:
     gen_addr(node);
@@ -426,7 +400,7 @@ void gen(Node *node) {
   case ND_NOP:
     return;
   default:
-    fprintf(stderr, "illegal node [NodeKind: %d]", node->kind);
+    fprintf(stderr, "illegal node [NodeKind: %d]\n", node->kind);
     exit(1);
   }
 }
