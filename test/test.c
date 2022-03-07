@@ -479,6 +479,18 @@ int strlit() {
   return 0;
 }
 
+// comment1
+/* comment2
+  multiline!
+ */
+int comment() {
+  // comment3
+  /* comment4
+   */
+  assert(3, 1 /* comment5 */ + 2); // comment6
+  return 0;
+}
+
 int main() {
   arith();
   cmp();
@@ -495,5 +507,6 @@ int main() {
   global();
   chars();
   strlit();
+  comment();
   return 0;
 }

@@ -36,10 +36,31 @@ bool tokenize_kw(char **pp, Token **pcur, char *kw) {
 }
 
 bool skip(char **pp) {
+  // whitespace
   if (isspace(**pp)) {
     (*pp)++;
     return true;
   }
+
+  // line comment
+  if (!strncmp(*pp, "//", 2)) {
+    *pp += 2;
+    while (**pp != '\n') {
+      (*pp)++;
+    }
+    return true;
+  }
+
+  // block comment
+  if (!strncmp(*pp, "/*", 2)) {
+    char *q = strstr(*pp + 2, "*/");
+    if (!q) {
+      error_at(*pp, "comment is not closed");
+    }
+    *pp = q + 2;
+    return true;
+  }
+
   return false;
 }
 
