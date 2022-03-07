@@ -6,6 +6,8 @@
 
 char *user_input;
 
+Token *token;
+
 Token *new_token(TokenKind kind, Token *cur, char *str) {
   Token *tok = calloc(1, sizeof(Token));
   tok->kind = kind;
@@ -22,10 +24,10 @@ bool is_alnum(char c) {
 
 // tokenize and return true if `kw` is keyword
 // otherwise, return false
-bool tokenize_kw(char **pp, Token **pcur, char *kw, TokenKind kind) {
+bool tokenize_kw(char **pp, Token **pcur, char *kw) {
   int len = strlen(kw);
   if (!strncmp(*pp, kw, len) && !is_alnum((*pp)[len])) {
-    *pcur = new_token(kind, *pcur, *pp);
+    *pcur = new_token(TK_RESERVED, *pcur, *pp);
     (*pcur)->len = len;
     *pp += len;
     return true;
@@ -65,38 +67,15 @@ bool tokenize_reserved(char **pp, Token **pcur) {
 }
 
 bool tokenize_keywords(char **p, Token **cur) {
-  if ((tokenize_kw(p, cur, "return", TK_RETURN))) {
-    return true;
+  char *kws[] = {"return", "if",  "else", "while",
+                 "for",    "int", "char", "sizeof"};
+  int len = sizeof(kws) / sizeof(char *);
+  for (int i = 0; i < len; i++) {
+    char *kw = kws[i];
+    if (tokenize_kw(p, cur, kw)) {
+      return true;
+    }
   }
-
-  if ((tokenize_kw(p, cur, "if", TK_IF))) {
-    return true;
-  }
-
-  if ((tokenize_kw(p, cur, "else", TK_ELSE))) {
-    return true;
-  }
-
-  if ((tokenize_kw(p, cur, "while", TK_WHILE))) {
-    return true;
-  }
-
-  if ((tokenize_kw(p, cur, "for", TK_FOR))) {
-    return true;
-  }
-
-  if ((tokenize_kw(p, cur, "int", TK_INT))) {
-    return true;
-  }
-
-  if ((tokenize_kw(p, cur, "char", TK_CHAR))) {
-    return true;
-  }
-
-  if ((tokenize_kw(p, cur, "sizeof", TK_SIZEOF))) {
-    return true;
-  }
-
   return false;
 }
 
@@ -113,7 +92,7 @@ bool tokenize_str(char **pp, Token **pcur) {
   char *p = *pp;
 
   if (*p == '\"') {
-    *pcur = new_token(TK_STR_LIT, *pcur, p);
+    *pcur = new_token(TK_STR, *pcur, p);
     (*pcur)->val = strtol(p, pp, 10);
 
     char *start = p;

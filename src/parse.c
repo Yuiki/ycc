@@ -8,9 +8,11 @@ LVar *locals;
 
 Str *strs;
 
-Token *token;
-
 Node *globals[100];
+
+Node *expr();
+
+Node *stmt();
 
 // return true if the next token is `op`
 // Otherwise, return false
@@ -128,7 +130,17 @@ LVar *find_lvar(Token *tok) {
   return NULL;
 }
 
-Node *expr();
+TypeKind type_of(Token *token) {
+  if (is_next("char")) {
+    return CHAR;
+  }
+  if (is_next("int")) {
+    return INT;
+  }
+  return -1;
+}
+
+bool is_type(Token *token) { return type_of(token) != -1; }
 
 Node *create_var(Token *tok, Type *type) {
   Node *node = calloc(1, sizeof(Node));
@@ -172,6 +184,7 @@ int create_str(char *value, int len) {
   return str->index;
 }
 
+// "(" expr ")" | ident ("(" ")")? | num
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -179,13 +192,13 @@ Node *primary() {
     return node;
   }
 
-  Token *tok = consume_ident();
-  if (tok) {
+  Token *ident = consume_ident();
+  if (ident) {
     if (consume("(")) { // function call
       Node *node = calloc(1, sizeof(Node));
       node->kind = ND_CALL;
-      node->func = tok->str;
-      node->func_len = tok->len;
+      node->func = ident->str;
+      node->func_len = ident->len;
       // TODO: set proper type
       node->type = new_type(INT);
 
@@ -206,7 +219,7 @@ Node *primary() {
       return node;
     } else { // var
       Node *node = calloc(1, sizeof(Node));
-      LVar *lvar = find_lvar(tok);
+      LVar *lvar = find_lvar(ident);
       if (lvar) {
         node->kind = ND_LVAR;
 
@@ -228,11 +241,11 @@ Node *primary() {
         return node;
       }
 
-      Type *type = find_gvar(tok);
+      Type *type = find_gvar(ident);
       if (type) {
         node->kind = ND_GVAR;
-        node->name = tok->str;
-        node->name_len = tok->len;
+        node->name = ident->str;
+        node->name_len = ident->len;
         node->type = type;
 
         if (consume("[")) {
@@ -254,7 +267,7 @@ Node *primary() {
     }
   }
 
-  if (token->kind == TK_STR_LIT) {
+  if (token->kind == TK_STR) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_STR;
     node->type = new_type(ARRAY);
@@ -271,22 +284,11 @@ Node *primary() {
   return new_node_num(expect_number());
 }
 
-int byte_of(TypeKind type) {
-  if (type == CHAR) {
-    return 1;
-  } else if (type == INT) {
-    return 4;
-  } else { // pointer
-    return 8;
-  }
-}
-
+// "sizeof" unary | ("+" | "-")? primary | ("*" | "&") unary
 Node *unary() {
-  if (token->kind == TK_SIZEOF) {
-    token = token->next;
-
+  if (consume("sizeof")) {
     Node *child = unary();
-    return new_node_num(byte_of(child->type->kind));
+    return new_node_num(size_of(child->type));
   }
   if (consume("*")) {
     Node *node = calloc(1, sizeof(Node));
@@ -312,6 +314,7 @@ Node *unary() {
   return primary();
 }
 
+// unary ("*" unary | "/" unary)*
 Node *mul() {
   Node *node = unary();
 
@@ -326,6 +329,7 @@ Node *mul() {
   }
 }
 
+// mul ("+" mul | "-" mul)*
 Node *add() {
   Node *node = mul();
 
@@ -340,6 +344,7 @@ Node *add() {
   }
 }
 
+// add ("<" add | "<=" add | ">" add | ">=" add)*
 Node *relational() {
   Node *node = add();
 
@@ -358,6 +363,7 @@ Node *relational() {
   }
 }
 
+// relational ("==" relational | "!=" relational)*
 Node *equality() {
   Node *node = relational();
 
@@ -372,6 +378,7 @@ Node *equality() {
   }
 }
 
+// equality ("=" assign)?
 Node *assign() {
   Node *node = equality();
   if (consume("=")) {
@@ -380,9 +387,8 @@ Node *assign() {
   return node;
 }
 
+// assign
 Node *expr() { return assign(); }
-
-Node *stmt();
 
 Node *block() {
   expect("{");
@@ -403,18 +409,6 @@ Node *block() {
 
   return node;
 }
-
-TypeKind type_of(Token *token) {
-  if (token->kind == TK_CHAR) {
-    return CHAR;
-  }
-  if (token->kind == TK_INT) {
-    return INT;
-  }
-  return -1;
-}
-
-bool is_type(Token *token) { return type_of(token) != -1; }
 
 Type *expect_type() {
   TypeKind ty_kind = type_of(token);
@@ -466,19 +460,21 @@ Node *var_decla() {
   return node;
 }
 
+// expr ";"
+// | "return" expr ";"
+// | "if" "(" expr ")" stmt ("else" stmt)?
+// | "while" "(" expr ")" stmt
+// | "for" "(" expr? ";" expr? ";" expr? ")" stmt
+// | "{" stmt* "}"
 Node *stmt() {
   Node *node;
 
-  if (token->kind == TK_RETURN) {
-    token = token->next;
-
+  if (consume("return")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_RETURN;
     node->lhs = expr();
     expect(";");
-  } else if (token->kind == TK_IF) {
-    token = token->next;
-
+  } else if (consume("if")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_IF;
 
@@ -487,13 +483,10 @@ Node *stmt() {
     expect(")");
     node->then = stmt();
 
-    if (token->kind == TK_ELSE) {
-      token = token->next;
+    if (consume("else")) {
       node->els = stmt();
     }
-  } else if (token->kind == TK_WHILE) {
-    token = token->next;
-
+  } else if (consume("while")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_WHILE;
 
@@ -501,9 +494,7 @@ Node *stmt() {
     node->cond = expr();
     expect(")");
     node->then = stmt();
-  } else if (token->kind == TK_FOR) {
-    token = token->next;
-
+  } else if (consume("for")) {
     node = calloc(1, sizeof(Node));
     node->kind = ND_FOR;
 
@@ -605,6 +596,7 @@ Node *global() {
   }
 }
 
+// stmt*
 void program() {
   int i = 0;
   while (!at_eof()) {

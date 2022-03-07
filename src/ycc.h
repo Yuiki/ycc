@@ -99,15 +99,7 @@ typedef enum {
   TK_RESERVED, // symbol
   TK_IDENT,    // identifier
   TK_NUM,
-  TK_RETURN, // return
-  TK_IF,
-  TK_ELSE,
-  TK_WHILE,
-  TK_FOR,
-  TK_INT,     // int
-  TK_CHAR,    // char
-  TK_SIZEOF,  // sizeof
-  TK_STR_LIT, // string literal
+  TK_STR, // string literal
   TK_EOF,
 } TokenKind;
 
