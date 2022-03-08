@@ -546,7 +546,23 @@ int inc1() {
 }
 
 int incs() {
+  printf("test: incs\n");
+
   inc1();
+  return 0;
+}
+
+int dec1() {
+  int i = 0;
+  assert(i--, 0);
+  assert(i, -1);
+  return 0;
+}
+
+int decs() {
+  printf("test: decs\n");
+
+  dec1();
   return 0;
 }
 
@@ -569,5 +585,6 @@ int main() {
   comment();
   init_lvars();
   incs();
+  decs();
   return 0;
 }

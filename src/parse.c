@@ -411,7 +411,8 @@ Node *str() {
   return node;
 }
 
-// "(" expr ")" | ident (("(" func_call) | var ("+" "+")? )? | str | num
+// "(" expr ")" | ident (("(" func_call) | var (("+" "+") | ("-" "-"))? )? | str
+// | num
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -430,6 +431,12 @@ Node *primary() {
       Node *assign = new_node_child(ND_ASSIGN, v, add);
       Node *sub = new_node_child(ND_SUB, assign, new_node_num(1));
       return sub;
+    }
+    if (consume("--")) {
+      Node *sub = new_node_child(ND_SUB, v, new_node_num(1));
+      Node *assign = new_node_child(ND_ASSIGN, v, sub);
+      Node *add = new_node_child(ND_ADD, assign, new_node_num(1));
+      return add;
     }
     return v;
   }
