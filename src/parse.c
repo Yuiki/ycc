@@ -222,14 +222,22 @@ Type *type_ident(Token **ident) {
   return type;
 }
 
-// "[" num "]""
+// "[" num? "]""
 Type *consume_array_decla(Type *base_ty, int *len) {
   if (!consume("[")) {
     return NULL;
   }
   Type *new_ty = new_type(ARRAY);
-  *len = expect_number();
-  new_ty->array_size = *len;
+
+  if (token->kind == TK_NUM) {
+    *len = token->val;
+    token = token->next;
+
+    new_ty->array_size = *len;
+  } else {
+    *len = -1;
+  }
+
   expect("]");
 
   new_ty->ptr_to = base_ty;
@@ -284,6 +292,11 @@ Node *var_decla() {
         }
       }
 
+      if (arr_len == -1) {
+        var->type->array_size = init_idx + 1;
+        var->offset += size_of(var->type);
+      }
+
       // zero initialization
       Node *zero = new_node_num(0);
       for (int i = init_idx + 1; i < arr_len; i++) {
@@ -302,6 +315,10 @@ Node *var_decla() {
 
       expect(";");
       return node;
+    }
+
+    if (arr_len == -1) {
+      error_at(token->str, "unknown array size");
     }
 
     Node *node = new_node_child(ND_ASSIGN, var, equality());

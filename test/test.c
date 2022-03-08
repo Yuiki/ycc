@@ -513,12 +513,17 @@ int init_lvar3() {
 }
 
 int init_lvar4() {
-  int y[5] = {1, 2, 3};
+  int y[5] = {1, 2, echo(3)};
   assert(y[0], 1);
   assert(y[1], 2);
   assert(y[2], 3);
   assert(y[3], 0);
   assert(y[4], 0);
+  return 0;
+}
+
+int init_lvar5() {
+  int x[] = {0, 1, 2};
   return 0;
 }
 
@@ -529,6 +534,7 @@ int init_lvars() {
   init_lvar2();
   init_lvar3();
   init_lvar4();
+  init_lvar5();
   return 0;
 }
 
