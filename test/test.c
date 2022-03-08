@@ -513,10 +513,12 @@ int init_lvar3() {
 }
 
 int init_lvar4() {
-  int y[3] = {1, 2, 3};
+  int y[5] = {1, 2, 3};
   assert(y[0], 1);
   assert(y[1], 2);
   assert(y[2], 3);
+  assert(y[3], 0);
+  assert(y[4], 0);
   return 0;
 }
 

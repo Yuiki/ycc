@@ -223,12 +223,13 @@ Type *type_ident(Token **ident) {
 }
 
 // "[" num "]""
-Type *consume_array_decla(Type *base_ty) {
+Type *consume_array_decla(Type *base_ty, int *len) {
   if (!consume("[")) {
     return NULL;
   }
   Type *new_ty = new_type(ARRAY);
-  new_ty->array_size = expect_number();
+  *len = expect_number();
+  new_ty->array_size = *len;
   expect("]");
 
   new_ty->ptr_to = base_ty;
@@ -249,7 +250,8 @@ Node *var_decla() {
   Type *type = type_ident(&ident);
 
   Type *arr_type;
-  if ((arr_type = consume_array_decla(type))) {
+  int arr_len;
+  if ((arr_type = consume_array_decla(type, &arr_len))) {
     type = arr_type;
   }
 
@@ -260,8 +262,9 @@ Node *var_decla() {
       Node *node = new_node(ND_BLOCK, NULL);
 
       Node *head = NULL;
-      for (int i = 0; !consume("}"); i++) {
-        Node *offset = new_node_num(i);
+      int init_idx;
+      for (init_idx = 0;; init_idx++) {
+        Node *offset = new_node_num(init_idx);
         Node *elem = create_arr_elem(var, offset);
 
         Node *next = new_node_child(ND_ASSIGN, elem, equality());
@@ -273,9 +276,27 @@ Node *var_decla() {
           head = head->next;
         }
 
-        if (!consume(",")) {
-          consume("}");
+        if (consume(",")) {
+          continue;
+        } else {
+          expect("}");
           break;
+        }
+      }
+
+      // zero initialization
+      Node *zero = new_node_num(0);
+      for (int i = init_idx + 1; i < arr_len; i++) {
+        Node *offset = new_node_num(i);
+        Node *elem = create_arr_elem(var, offset);
+
+        Node *next = new_node_child(ND_ASSIGN, elem, zero);
+        if (head == NULL) {
+          head = next;
+          node->body = head;
+        } else {
+          head->next = next;
+          head = head->next;
         }
       }
 
@@ -646,7 +667,8 @@ Node *func(Token *name) {
 // ("[" num "]") | ";"
 Node *global_var(Token *name, Type *type) {
   Type *arr_type;
-  if ((arr_type = consume_array_decla(type))) {
+  int arr_len;
+  if ((arr_type = consume_array_decla(type, &arr_len))) {
     type = arr_type;
   }
 
