@@ -484,6 +484,8 @@ int strlit() {
   multiline!
  */
 int comment() {
+  printf("test: comment\n");
+
   // comment3
   /* comment4
    */
@@ -501,12 +503,30 @@ int init_lvar2() {
   char arr[3];
   int len = sizeof(arr) / sizeof(arr[0]) + echo(0);
   assert(len, 3);
-  return 1;
+  return 0;
+}
+
+int init_lvar3() {
+  char *msg1 = "foo";
+  printf("%s\n", msg1);
+  return 0;
+}
+
+int init_lvar4() {
+  int y[3] = {1, 2, 3};
+  assert(y[0], 1);
+  assert(y[1], 2);
+  assert(y[2], 3);
+  return 0;
 }
 
 int init_lvars() {
+  printf("test: init_lvars\n");
+
   init_lvar1();
   init_lvar2();
+  init_lvar3();
+  init_lvar4();
   return 0;
 }
 

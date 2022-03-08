@@ -1,5 +1,6 @@
 #include "ycc.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -234,7 +235,15 @@ Type *consume_array_decla(Type *base_ty) {
   return new_ty;
 }
 
-// type-ident (array-decla)? ";"
+Node *create_arr_elem(Node *arr, Node *offset) {
+  Node *add = new_node_child(ND_ADD, arr, offset);
+  Node *deref = new_node(ND_DEREF, add->type->ptr_to);
+  deref->lhs = add;
+  return deref;
+}
+
+// type-ident (array-decla)?
+// ("=" (equality | ("{" equality? ("," equality)* "}")))? ";"
 Node *var_decla() {
   Token *ident;
   Type *type = type_ident(&ident);
@@ -247,6 +256,33 @@ Node *var_decla() {
   Node *var = create_var(ident, type);
 
   if (consume("=")) {
+    if (consume("{")) {
+      Node *node = new_node(ND_BLOCK, NULL);
+
+      Node *head = NULL;
+      for (int i = 0; !consume("}"); i++) {
+        Node *offset = new_node_num(i);
+        Node *elem = create_arr_elem(var, offset);
+
+        Node *next = new_node_child(ND_ASSIGN, elem, equality());
+        if (head == NULL) {
+          head = next;
+          node->body = head;
+        } else {
+          head->next = next;
+          head = head->next;
+        }
+
+        if (!consume(",")) {
+          consume("}");
+          break;
+        }
+      }
+
+      expect(";");
+      return node;
+    }
+
     Node *node = new_node_child(ND_ASSIGN, var, equality());
     expect(";");
     return node;
@@ -283,13 +319,9 @@ Node *func_call(Token *name) {
 // ("[" expr "]")?
 Node *array(Node *base) {
   if (consume("[")) {
-    Node *add = new_node_child(ND_ADD, base, expr());
-    Node *deref = new_node(ND_DEREF, add->type->ptr_to);
-    deref->lhs = add;
-
+    Node *elem = create_arr_elem(base, expr());
     expect("]");
-
-    return deref;
+    return elem;
   }
   return NULL;
 }
