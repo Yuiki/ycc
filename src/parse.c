@@ -14,6 +14,8 @@ Node *expr();
 
 Node *stmt();
 
+Node *equality();
+
 // return true if the next token is `op`
 // Otherwise, return false
 bool is_next(char *op) {
@@ -242,11 +244,16 @@ Node *var_decla() {
     type = arr_type;
   }
 
-  create_var(ident, type);
+  Node *var = create_var(ident, type);
 
-  expect(";");
-
-  return new_node(ND_NOP, NULL);
+  if (consume("=")) {
+    Node *node = new_node_child(ND_ASSIGN, var, equality());
+    expect(";");
+    return node;
+  } else {
+    expect(";");
+    return new_node(ND_NOP, NULL);
+  }
 }
 
 // ")" | expr ("," expr)* ")"

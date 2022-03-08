@@ -491,6 +491,25 @@ int comment() {
   return 0;
 }
 
+int init_lvar1() {
+  int x = 3;
+  assert(x, 3);
+  return 0;
+}
+
+int init_lvar2() {
+  char arr[3];
+  int len = sizeof(arr) / sizeof(arr[0]) + echo(0);
+  assert(len, 3);
+  return 1;
+}
+
+int init_lvars() {
+  init_lvar1();
+  init_lvar2();
+  return 0;
+}
+
 int main() {
   arith();
   cmp();
@@ -508,5 +527,6 @@ int main() {
   chars();
   strlit();
   comment();
+  init_lvars();
   return 0;
 }
