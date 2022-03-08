@@ -538,6 +538,18 @@ int init_lvars() {
   return 0;
 }
 
+int inc1() {
+  int i = 0;
+  assert(i++, 0);
+  assert(i, 1);
+  return 0;
+}
+
+int incs() {
+  inc1();
+  return 0;
+}
+
 int main() {
   arith();
   cmp();
@@ -556,5 +568,6 @@ int main() {
   strlit();
   comment();
   init_lvars();
+  incs();
   return 0;
 }

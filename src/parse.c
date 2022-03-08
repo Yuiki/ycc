@@ -411,7 +411,7 @@ Node *str() {
   return node;
 }
 
-// "(" expr ")" | ident (("(" func_call) | var)? | str | num
+// "(" expr ")" | ident (("(" func_call) | var ("+" "+")? )? | str | num
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -424,7 +424,14 @@ Node *primary() {
     if (consume("(")) { // function call
       return func_call(ident);
     }
-    return var(ident);
+    Node *v = var(ident);
+    if (consume("++")) {
+      Node *add = new_node_child(ND_ADD, v, new_node_num(1));
+      Node *assign = new_node_child(ND_ASSIGN, v, add);
+      Node *sub = new_node_child(ND_SUB, assign, new_node_num(1));
+      return sub;
+    }
+    return v;
   }
 
   if (token->kind == TK_STR) {
