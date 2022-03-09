@@ -154,10 +154,22 @@ void while1() {
   assert(i, 10);
 }
 
+void while2() {
+  int i = 0;
+  while (i < 10) {
+    if (i == 5) {
+      break;
+    }
+    i = i + 1;
+  }
+  assert(i, 5);
+}
+
 void whiles() {
   printf("test: whiles\n");
 
   while1();
+  while2();
 }
 
 void for1() {
@@ -182,11 +194,22 @@ void for2() {
   assert(a + b, 165);
 }
 
+void for3() {
+  int i;
+  for (i = 0; i < 10; i++) {
+    if (i == 5) {
+      break;
+    }
+  }
+  assert(i, 5);
+}
+
 void fors() {
   printf("test: fors\n");
 
   for1();
   for2();
+  for3();
 }
 
 void call1() { foo(); }

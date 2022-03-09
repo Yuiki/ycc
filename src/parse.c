@@ -400,7 +400,7 @@ Node *var(Token *name) {
   if (gv) {
     return gvar(name, gv);
   }
-  error_at(token->str, "unknown identifier");
+  error_at(name->str, "unknown identifier");
   return NULL; // not reachable
 }
 
@@ -621,6 +621,14 @@ Node *block() {
   return node;
 }
 
+// "break" ";"
+Node *breakn() {
+  expect("break");
+  Node *node = new_node(ND_BREAK, NULL);
+  expect(";");
+  return node;
+}
+
 // "return" expr? ";"
 Node *ret() {
   expect("return");
@@ -689,9 +697,11 @@ Node *forn() {
   return node;
 }
 
-// ret | ifn | whilen | forn | block | var_decla | expr ";"
+// break | ret | ifn | whilen | forn | block | var_decla | expr ";"
 Node *stmt() {
-  if (is_next("return")) {
+  if (is_next("break")) {
+    return breakn();
+  } else if (is_next("return")) {
     return ret();
   } else if (is_next("if")) {
     return ifn();

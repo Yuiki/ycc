@@ -1,7 +1,8 @@
 #include "ycc.h"
 #include <stdio.h>
 
-int label_idx = 0;
+int label_loop_idx = 0;
+int label_cond_idx = 0;
 
 void gen();
 
@@ -148,17 +149,17 @@ void gen_call(Node *node) {
   }
 
   // fix alignment
-  int idx = label_idx++;
+  int idx = label_cond_idx++;
   printf("  mov rax, rsp\n");
   printf("  and rax, 15\n");
-  printf("  jne .Lbegin%d\n", idx);
+  printf("  jne .Cbegin%d\n", idx);
   printf("  call %.*s\n", node->func_len, node->func);
-  printf("  jmp .Lend%d\n", idx);
-  printf(".Lbegin%d:\n", idx);
+  printf("  jmp .Cend%d\n", idx);
+  printf(".Cbegin%d:\n", idx);
   printf("  sub rsp, 8\n");
   printf("  call %.*s\n", node->func_len, node->func);
   printf("  add rsp, 8\n");
-  printf(".Lend%d:\n", idx);
+  printf(".Cend%d:\n", idx);
 
   printf("  push rax\n");
 }
@@ -177,6 +178,12 @@ void gen_assign(Node *node) {
   printf("  push rdi\n");
 }
 
+void gen_break(Node *node) {
+  int idx = label_loop_idx - 1;
+  printf("  # break\n");
+  printf("  jmp .Lend%d\n", idx);
+}
+
 void gen_return(Node *node) {
   if (node->lhs) {
     gen(node->lhs);
@@ -186,22 +193,22 @@ void gen_return(Node *node) {
 }
 
 void gen_if(Node *node) {
-  int idx = label_idx++;
+  int idx = label_cond_idx++;
   gen(node->cond);
   printf("  pop rax\n");
   printf("  cmp rax, 0\n");
-  printf("  je .Lelse%d\n", idx);
+  printf("  je .Celse%d\n", idx);
   gen(node->then);
-  printf("  jmp .Lend%d\n", idx);
-  printf(".Lelse%d:\n", idx);
+  printf("  jmp .Cend%d\n", idx);
+  printf(".Celse%d:\n", idx);
   if (node->els) {
     gen(node->els);
   }
-  printf(".Lend%d:\n", idx);
+  printf(".Cend%d:\n", idx);
 }
 
 void gen_while(Node *node) {
-  int idx = label_idx++;
+  int idx = label_loop_idx++;
   printf(".Lbegin%d:\n", idx);
   gen(node->cond);
   printf("  pop rax\n");
@@ -213,7 +220,7 @@ void gen_while(Node *node) {
 }
 
 void gen_for(Node *node) {
-  int idx = label_idx++;
+  int idx = label_loop_idx++;
   gen(node->init);
   printf(".Lbegin%d:\n", idx);
   gen(node->cond);
@@ -344,45 +351,45 @@ void gen_le(Node *node) {
 }
 
 void gen_land(Node *node) {
-  int idx = label_idx++;
+  int idx = label_cond_idx++;
 
   gen(node->lhs);
   printf("  pop rax\n");
   printf("  cmp rax, 0\n");
-  printf("  je .Lfalse%d\n", idx);
+  printf("  je .Cfalse%d\n", idx);
 
   gen(node->rhs);
   printf("  pop rax\n");
   printf("  cmp rax, 0\n");
-  printf("  je .Lfalse%d\n", idx);
+  printf("  je .Cfalse%d\n", idx);
 
   printf("  push 1\n");
-  printf("  jmp .Lend%d\n", idx);
+  printf("  jmp .Cend%d\n", idx);
 
-  printf(".Lfalse%d:\n", idx);
+  printf(".Cfalse%d:\n", idx);
   printf("  push 0\n");
-  printf(".Lend%d:\n", idx);
+  printf(".Cend%d:\n", idx);
 }
 
 void gen_lor(Node *node) {
-  int idx = label_idx++;
+  int idx = label_cond_idx++;
 
   gen(node->lhs);
   printf("  pop rax\n");
   printf("  cmp rax, 0\n");
-  printf("  jne .Ltrue%d\n", idx);
+  printf("  jne .Ctrue%d\n", idx);
 
   gen(node->rhs);
   printf("  pop rax\n");
   printf("  cmp rax, 0\n");
-  printf("  jne .Ltrue%d\n", idx);
+  printf("  jne .Ctrue%d\n", idx);
 
   printf("  push 0\n");
-  printf("  jmp .Lend%d\n", idx);
+  printf("  jmp .Cend%d\n", idx);
 
-  printf(".Ltrue%d:\n", idx);
+  printf(".Ctrue%d:\n", idx);
   printf("  push 1\n");
-  printf(".Lend%d:\n", idx);
+  printf(".Cend%d:\n", idx);
 }
 
 void gen(Node *node) {
@@ -414,6 +421,9 @@ void gen(Node *node) {
     return;
   case ND_ASSIGN:
     gen_assign(node);
+    return;
+  case ND_BREAK:
+    gen_break(node);
     return;
   case ND_RETURN:
     gen_return(node);
