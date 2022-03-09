@@ -414,8 +414,7 @@ Node *str() {
   return node;
 }
 
-// "(" expr ")" | ident (("(" func_call) | var (("+" "+") | ("-" "-"))? )? | str
-// | num
+// "(" expr ")" | ident (("(" func_call) | var )? | str | num
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -428,20 +427,7 @@ Node *primary() {
     if (consume("(")) { // function call
       return func_call(ident);
     }
-    Node *v = var(ident);
-    if (consume("++")) {
-      Node *add = new_node_child(ND_ADD, v, new_node_num(1));
-      Node *assign = new_node_child(ND_ASSIGN, v, add);
-      Node *sub = new_node_child(ND_SUB, assign, new_node_num(1));
-      return sub;
-    }
-    if (consume("--")) {
-      Node *sub = new_node_child(ND_SUB, v, new_node_num(1));
-      Node *assign = new_node_child(ND_ASSIGN, v, sub);
-      Node *add = new_node_child(ND_ADD, assign, new_node_num(1));
-      return add;
-    }
-    return v;
+    return var(ident);
   }
 
   if (token->kind == TK_STR) {
@@ -451,11 +437,40 @@ Node *primary() {
   return new_node_num(expect_number());
 }
 
-// ("sizeof" | "*" | "&" | "!") unary | ("+" | "-")? primary
+// primary ("++" | "--")*
+Node *postfix() {
+  Node *node = primary();
+  for (;;) {
+    if (consume("++")) {
+      Node *add = new_node_child(ND_ADD, node, new_node_num(1));
+      Node *assign = new_node_child(ND_ASSIGN, node, add);
+      Node *sub = new_node_child(ND_SUB, assign, new_node_num(1));
+      node = sub;
+      continue;
+    }
+    if (consume("--")) {
+      Node *sub = new_node_child(ND_SUB, node, new_node_num(1));
+      Node *assign = new_node_child(ND_ASSIGN, node, sub);
+      Node *add = new_node_child(ND_ADD, assign, new_node_num(1));
+      node = add;
+      continue;
+    }
+    return node;
+  }
+}
+
+// ("sizeof" | "&" | "*" | "+" | "-" | "!") unary | postfix
 Node *unary() {
   if (consume("sizeof")) {
     Node *child = unary();
     return new_node_num(size_of(child->type));
+  }
+
+  if (consume("&")) {
+    Node *node = new_node(ND_ADDR, new_type(PTR));
+    node->lhs = unary();
+    node->type->ptr_to = node->lhs->type;
+    return node;
   }
 
   if (consume("*")) {
@@ -464,24 +479,20 @@ Node *unary() {
     node->lhs = lhs;
     return node;
   }
-  if (consume("&")) {
-    Node *node = new_node(ND_ADDR, new_type(PTR));
-    node->lhs = unary();
-    node->type->ptr_to = node->lhs->type;
-    return node;
+
+  if (consume("+")) {
+    return unary();
+  }
+
+  if (consume("-")) {
+    return new_node_child(ND_SUB, new_node_num(0), unary());
   }
 
   if (consume("!")) {
     return new_node_child(ND_EQ, unary(), new_node_num(0));
   }
 
-  if (consume("+")) {
-    return primary();
-  }
-  if (consume("-")) {
-    return new_node_child(ND_SUB, new_node_num(0), primary());
-  }
-  return primary();
+  return postfix();
 }
 
 // unary ("*" unary | "/" unary)*
