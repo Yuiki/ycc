@@ -135,13 +135,36 @@ bool tokenize_str(char **pp, Token **pcur) {
 }
 
 bool tokenize_char(char **pp, Token **pcur) {
+  int len;
   if (**pp == '\'') {
-    if (*(*pp + 2) != '\'') {
+    char c;
+    if (*(*pp + 1) == '\\') {
+      switch (*(*pp + 2)) {
+      case '0': // TODO: support octal
+        c = '\0';
+        break;
+      case 'n':
+        c = '\n';
+        break;
+      case '\"':
+        c = '\"';
+        break;
+      case '\'':
+        c = '\'';
+        break;
+      }
+      len = 2;
+    } else {
+      c = *(*pp + 1);
+      len = 1;
+    }
+    if (*(*pp + len + 1) != '\'') { // 1 = '
       error_at(*pp, "char literal is invalid");
     }
 
-    *pcur = new_token(TK_CHAR, *pcur, *pp + 1);
-    (*pp) += 3;
+    *pcur = new_token(TK_CHAR, *pcur, *pp + 1); // 1 = '
+    (*pcur)->val = c;
+    (*pp) += len + 2; // 2 = ''
     return true;
   }
   return false;

@@ -416,7 +416,7 @@ Node *str() {
 
 Node *character() {
   Node *node = new_node(ND_NUM, new_type(CHAR));
-  node->val = token->str[0];
+  node->val = token->val;
   token = token->next;
   return node;
 }

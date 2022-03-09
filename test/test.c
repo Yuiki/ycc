@@ -477,7 +477,14 @@ void char2() {
 
 void char3() {
   char c = 'a';
-  assert(c, 98);
+  assert(c, 97);
+}
+
+void char4() {
+  assert('\0', 0);
+  assert('\n', 10);
+  assert('\"', 34);
+  assert('\'', 39);
 }
 
 void chars() {
@@ -486,6 +493,7 @@ void chars() {
   char1();
   char2();
   char3();
+  char4();
 }
 
 void strlit() {
