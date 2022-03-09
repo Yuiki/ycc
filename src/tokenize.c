@@ -69,7 +69,7 @@ bool tokenize_reserved(char **pp, Token **pcur) {
 
   if (!strncmp(p, "==", 2) || !strncmp(p, "!=", 2) || !strncmp(p, "<=", 2) ||
       !strncmp(p, ">=", 2) || !strncmp(p, "++", 2) || !strncmp(p, "--", 2) ||
-      !strncmp(p, "+=", 2)) {
+      !strncmp(p, "+=", 2) || !strncmp(p, "&&", 2)) {
     *pcur = new_token(TK_RESERVED, *(pcur), p);
     (*pcur)->len = 2;
     *pp += 2;

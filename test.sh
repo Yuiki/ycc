@@ -9,8 +9,4 @@ cc -o ./build/tmp ./build/tmp.s
 echo 'RUN'
 ./build/tmp
 
-if [ $? -eq 0 ]; then
-  echo 'OK'
-else
-  echo 'NG'
-fi
+echo 'OK'

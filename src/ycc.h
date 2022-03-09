@@ -10,6 +10,7 @@ typedef enum {
   ND_NE,         // !=
   ND_LT,         // <
   ND_LE,         // <=
+  ND_LAND,       // &&
   ND_GVAR_DECLA, // global variable declaration
   ND_GVAR,       // global variable
   ND_LVAR,       // local variable

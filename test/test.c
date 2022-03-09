@@ -511,6 +511,23 @@ void assigns() {
   assign_eq();
 }
 
+int exit1() {
+  exit(1);
+  return 0;
+}
+
+void logical_and() {
+  assert(0 && 1, 0);
+  assert(1 && 1, 1);
+  assert(0 && exit1(), 0);
+}
+
+void logicals() {
+  printf("test: logicals\n");
+
+  logical_and();
+}
+
 int main() {
   arith();
   cmp();
@@ -533,5 +550,6 @@ int main() {
   decs();
   nots();
   assigns();
+  logicals();
   return 0;
 }

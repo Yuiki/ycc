@@ -334,6 +334,27 @@ void gen_le(Node *node) {
   printf("  push rax\n");
 }
 
+void gen_land(Node *node) {
+  int idx = label_idx++;
+
+  gen(node->lhs);
+  printf("  pop rax\n");
+  printf("  cmp rax, 0\n");
+  printf("  je .Lfalse%d\n", idx);
+
+  gen(node->rhs);
+  printf("  pop rax\n");
+  printf("  cmp rax, 0\n");
+  printf("  je .Lfalse%d\n", idx);
+
+  printf("  push 1\n");
+  printf("  jmp .Lend%d\n", idx);
+
+  printf(".Lfalse%d:\n", idx);
+  printf("  push 0\n");
+  printf(".Lend%d:\n", idx);
+}
+
 void gen(Node *node) {
   switch (node->kind) {
   case ND_NUM:
@@ -403,6 +424,8 @@ void gen(Node *node) {
   case ND_LE:
     gen_le(node);
     break;
+  case ND_LAND:
+    gen_land(node);
   case ND_NOP:
     return;
   default:

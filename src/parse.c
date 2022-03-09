@@ -559,9 +559,21 @@ Node *equality() {
   }
 }
 
+// equality ("&&" logical_and)*
+Node *logical_and() {
+  Node *node = equality();
+  for (;;) {
+    if (consume("&&")) {
+      node = new_node_child(ND_LAND, node, logical_and());
+    } else {
+      return node;
+    }
+  }
+}
+
 // equality (("=" | "+=") assign)?
 Node *assign() {
-  Node *node = equality();
+  Node *node = logical_and();
   if (consume("=")) {
     node = new_node_child(ND_ASSIGN, node, assign());
   }
