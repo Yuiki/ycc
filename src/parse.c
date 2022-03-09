@@ -4,8 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-// local vars
-LVar *locals;
+Scope *scope;
+
+int lvars_size;
 
 Str *strs;
 
@@ -150,49 +151,45 @@ Node *new_node_num(int val) {
   return node;
 }
 
-Type *find_gvar(Token *tok) {
-  for (int i = 0; globals[i]; i++) {
-    Node *global = globals[i];
-    if (global->kind == ND_GVAR_DECLA && global->name_len == tok->len &&
-        !memcmp(tok->str, global->name, global->name_len)) {
-      return global->type;
+Ident *find_var(Token *tok, bool current) {
+  for (Scope *sc = scope; sc; sc = sc->parent) {
+    for (Ident *var = sc->ident; var; var = var->next) {
+      if (var && var->len == tok->len &&
+          !memcmp(tok->str, var->name, var->len)) {
+        return var;
+      }
+    }
+    if (current) {
+      break;
     }
   }
   return NULL;
 }
 
-LVar *find_lvar(Token *tok) {
-  for (LVar *var = locals; var; var = var->next) {
-    if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) {
-      return var;
-    }
-  }
-  return NULL;
+Ident *create_ident(Type *type, char *name, int name_len, IdentKind kind) {
+  Ident *ident = calloc(1, sizeof(Ident));
+  ident->name = name;
+  ident->len = name_len;
+  ident->kind = kind;
+  ident->type = type;
+  return ident;
 }
 
 Node *create_var(Token *tok, Type *type) {
   Node *node = new_node(ND_LVAR, type);
 
-  LVar *lvar = find_lvar(tok);
+  Ident *lvar = find_var(tok, true);
   if (lvar) {
     error_at(token->str, "変数が定義済みです");
   }
 
-  lvar = calloc(1, sizeof(LVar));
-  lvar->next = locals;
-  lvar->name = tok->str;
-  lvar->len = tok->len;
-  lvar->type = type;
+  lvar = create_ident(type, tok->str, tok->len, LVAR);
+  lvar->next = scope->ident;
+  scope->ident = lvar;
 
   int diff = size_of(type);
-  if (locals) {
-    lvar->offset = locals->offset + diff;
-  } else {
-    lvar->offset = diff;
-  }
-
-  locals = lvar;
-
+  lvars_size += diff;
+  lvar->offset = lvars_size;
   node->offset = lvar->offset;
 
   return node;
@@ -367,9 +364,9 @@ Node *array(Node *base) {
   return NULL;
 }
 
-Node *lvar(LVar *lv) {
-  Node *node = new_node(ND_LVAR, lv->type);
-  node->offset = lv->offset;
+Node *lvar(Type *type, int offset) {
+  Node *node = new_node(ND_LVAR, type);
+  node->offset = offset;
 
   Node *arr;
   if ((arr = array(node))) {
@@ -391,17 +388,17 @@ Node *gvar(Token *name, Type *type) {
 }
 
 Node *var(Token *name) {
-  LVar *lv = find_lvar(name);
-  if (lv) {
-    return lvar(lv);
+  Ident *var = find_var(name, false);
+  if (!var) {
+    error_at(name->str, "unknown identifier");
   }
 
-  Type *gv = find_gvar(name);
-  if (gv) {
-    return gvar(name, gv);
+  if (var->kind == LVAR) {
+    return lvar(var->type, var->offset);
   }
-  error_at(name->str, "unknown identifier");
-  return NULL; // not reachable
+
+  // global var
+  return gvar(name, var->type);
 }
 
 Node *str() {
@@ -617,6 +614,14 @@ Node *assign() {
 // assign
 Node *expr() { return assign(); }
 
+void begin_scope() {
+  Scope *new_scope = calloc(1, sizeof(Scope));
+  new_scope->parent = scope;
+  scope = new_scope;
+}
+
+void end_scope() { scope = scope->parent; }
+
 // "{" stmt* "}"
 Node *block() {
   expect("{");
@@ -738,7 +743,10 @@ Node *stmt() {
   } else if (is_next("for")) {
     return forn();
   } else if (is_next("{")) {
-    return block();
+    begin_scope();
+    Node *b = block();
+    end_scope();
+    return b;
   } else if (is_type(token)) { // declaration
     return var_decla();
   }
@@ -750,7 +758,7 @@ Node *stmt() {
 
 // "(" (")" | type ("," expr)* ")") block
 Node *func(Token *name) {
-  locals = NULL;
+  begin_scope();
 
   expect("(");
 
@@ -779,7 +787,10 @@ Node *func(Token *name) {
 
   node->block = block();
 
-  node->locals = locals;
+  node->lvars_size = lvars_size + ((16 - (lvars_size % 16)) % 16);
+  lvars_size = 0;
+
+  end_scope();
 
   return node;
 }
@@ -803,6 +814,9 @@ Node *global_var(Token *name, Type *type) {
 
 // (type_ident ("(" func | gloval_var))*
 void program() {
+  begin_scope();
+  Ident **head = &scope->ident;
+
   Token *ident;
   for (int i = 0; !at_eof(); i++) {
     Type *type = type_ident(&ident);
@@ -810,7 +824,12 @@ void program() {
     if (is_next("(")) { // function
       globals[i] = func(ident);
     } else { // global var
-      globals[i] = global_var(ident, type);
+      Node *node = global_var(ident, type);
+      globals[i] = node;
+
+      Ident *ident = create_ident(node->type, node->name, node->name_len, GVAR);
+      *head = ident;
+      head = &ident->next;
     }
   }
 }

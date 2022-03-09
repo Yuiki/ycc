@@ -90,7 +90,7 @@ void gen_func(Node *node) {
   // prologue
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  int stack_size = calc_stack_size(node->locals);
+  int stack_size = node->lvars_size;
   printf("  sub rsp, %d\n", stack_size);
 
   // TODO: support >6 params

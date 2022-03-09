@@ -17,11 +17,3 @@ int size_of(Type *type) {
     return -1; // not reachable
   }
 }
-
-int calc_stack_size(LVar *locals) {
-  int size = 0;
-  for (LVar *local = locals; local; local = local->next) {
-    size += size_of(local->type);
-  }
-  return size + ((16 - (size % 16)) % 16);
-}

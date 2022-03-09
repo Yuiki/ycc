@@ -42,14 +42,24 @@ struct Type {
   size_t array_size;
 };
 
-typedef struct LVar LVar;
+typedef enum { GVAR, LVAR } IdentKind;
 
-struct LVar {
-  LVar *next; // next var or NULL
+typedef struct Ident Ident;
+
+struct Ident {
+  Ident *next; // next var or NULL
   char *name;
-  int len;    // len of name
-  int offset; // offset from RBP
-  Type *type;
+  int len; // len of name
+  IdentKind kind;
+  int offset; // offset from RBP if kind = VAR
+  Type *type; // if kind = VAR
+};
+
+typedef struct Scope Scope;
+
+struct Scope {
+  Ident *ident; // head
+  Scope *parent;
 };
 
 typedef struct Str Str;
@@ -92,7 +102,7 @@ struct Node {
 
   Type *type;
 
-  LVar *locals; // if kind = ND_FUNC
+  int lvars_size; // if kind = ND_FUNC
 
   char *name;   // var name if kind = ND_GVAR, ND_GVAR_DECLA
   int name_len; // var name len if kind = ND_GVAR, ND_GVAR_DECLA
@@ -156,5 +166,3 @@ char *read_file(char *path);
 // size.c
 
 int size_of(Type *type);
-
-int calc_stack_size(LVar *locals);

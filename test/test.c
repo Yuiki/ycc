@@ -626,6 +626,19 @@ void logicals() {
   logical_or();
 }
 
+void scopes() {
+  printf("test: scopes\n");
+
+  int i = 0;
+  {
+    int i = 1;
+    int j = 2;
+    assert(i, 1);
+  }
+  int j = 3;
+  assert(j, 3);
+}
+
 int main() {
   arith();
   cmp();
@@ -649,5 +662,6 @@ int main() {
   nots();
   assigns();
   logicals();
+  scopes();
   return 0;
 }
