@@ -548,11 +548,15 @@ Node *equality() {
   }
 }
 
-// equality ("=" assign)?
+// equality (("=" | "+=") assign)?
 Node *assign() {
   Node *node = equality();
   if (consume("=")) {
     node = new_node_child(ND_ASSIGN, node, assign());
+  }
+  if (consume("+=")) {
+    Node *add = new_node_child(ND_ADD, node, assign());
+    node = new_node_child(ND_ASSIGN, node, add);
   }
   return node;
 }

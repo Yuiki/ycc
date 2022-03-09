@@ -499,6 +499,18 @@ void nots() {
   assert(0, !!0);
 }
 
+void assign_eq() {
+  int i = 2;
+  i += 3;
+  assert(i, 5);
+}
+
+void assigns() {
+  printf("test: assigns\n");
+
+  assign_eq();
+}
+
 int main() {
   arith();
   cmp();
@@ -520,5 +532,6 @@ int main() {
   incs();
   decs();
   nots();
+  assigns();
   return 0;
 }
