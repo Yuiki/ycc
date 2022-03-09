@@ -23,7 +23,8 @@ typedef enum {
   ND_STR,        // string
   ND_ASSIGN,     // =
   ND_RETURN,     // return
-  ND_BREAK,      // return
+  ND_BREAK,      // break
+  ND_CONTINUE,   // continue
   ND_IF,         // if
   ND_WHILE,      // while
   ND_FOR,        // for

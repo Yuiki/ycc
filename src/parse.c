@@ -621,6 +621,14 @@ Node *block() {
   return node;
 }
 
+// "continue" ";"
+Node *cont() {
+  expect("continue");
+  Node *node = new_node(ND_CONTINUE, NULL);
+  expect(";");
+  return node;
+}
+
 // "break" ";"
 Node *breakn() {
   expect("break");
@@ -697,9 +705,11 @@ Node *forn() {
   return node;
 }
 
-// break | ret | ifn | whilen | forn | block | var_decla | expr ";"
+// cont | breakn | ret | ifn | whilen | forn | block | var_decla | expr ";"
 Node *stmt() {
-  if (is_next("break")) {
+  if (is_next("continue")) {
+    return cont();
+  } else if (is_next("break")) {
     return breakn();
   } else if (is_next("return")) {
     return ret();

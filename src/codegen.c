@@ -178,9 +178,13 @@ void gen_assign(Node *node) {
   printf("  push rdi\n");
 }
 
+void gen_continue(Node *node) {
+  int idx = label_loop_idx - 1;
+  printf("  jmp .Lcontin%d\n", idx);
+}
+
 void gen_break(Node *node) {
   int idx = label_loop_idx - 1;
-  printf("  # break\n");
   printf("  jmp .Lend%d\n", idx);
 }
 
@@ -215,6 +219,7 @@ void gen_while(Node *node) {
   printf("  cmp rax, 0\n");
   printf("  je .Lend%d\n", idx);
   gen(node->then);
+  printf(".Lcontin%d:\n", idx);
   printf("  jmp .Lbegin%d\n", idx);
   printf(".Lend%d:\n", idx);
 }
@@ -228,6 +233,7 @@ void gen_for(Node *node) {
   printf("  cmp rax, 0\n");
   printf("  je .Lend%d\n", idx);
   gen(node->then);
+  printf(".Lcontin%d:\n", idx);
   gen(node->step);
   printf("  jmp .Lbegin%d\n", idx);
   printf(".Lend%d:\n", idx);
@@ -421,6 +427,9 @@ void gen(Node *node) {
     return;
   case ND_ASSIGN:
     gen_assign(node);
+    return;
+  case ND_CONTINUE:
+    gen_continue(node);
     return;
   case ND_BREAK:
     gen_break(node);
