@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 echo 'COMPILE'
 ./build/ycc ./test/test.c > ./build/tmp.s
 echo 'LINK'

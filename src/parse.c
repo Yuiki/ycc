@@ -34,6 +34,9 @@ TypeKind type_of(Token *token) {
   if (is_next("int")) {
     return INT;
   }
+  if (is_next("void")) {
+    return VOID;
+  }
   return -1;
 }
 
@@ -577,13 +580,16 @@ Node *block() {
   return node;
 }
 
-// "return" expr ";"
+// "return" expr? ";"
 Node *ret() {
   expect("return");
 
   Node *node = new_node(ND_RETURN, NULL);
-  node->lhs = expr();
-  expect(";");
+  if (!consume(";")) {
+    node->lhs = expr();
+    expect(";");
+    return node;
+  }
   return node;
 }
 

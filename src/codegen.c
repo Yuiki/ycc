@@ -178,8 +178,10 @@ void gen_assign(Node *node) {
 }
 
 void gen_return(Node *node) {
-  gen(node->lhs);
-  printf("  pop rax\n");
+  if (node->lhs) {
+    gen(node->lhs);
+    printf("  pop rax\n");
+  }
   gen_epilogue();
 }
 

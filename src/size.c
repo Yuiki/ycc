@@ -6,6 +6,8 @@ int size_of(Type *type) {
     return 1;
   case INT:
     return 4;
+  case VOID:
+    return 0;
   case PTR:
     return 8;
   case ARRAY:
