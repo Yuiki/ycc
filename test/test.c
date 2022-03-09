@@ -517,15 +517,26 @@ int exit1() {
 }
 
 void logical_and() {
+  assert(0 && 0, 0);
   assert(0 && 1, 0);
+  assert(1 && 0, 0);
   assert(1 && 1, 1);
   assert(0 && exit1(), 0);
+}
+
+void logical_or() {
+  assert(0 || 0, 0);
+  assert(0 || 1, 1);
+  assert(1 || 0, 1);
+  assert(1 || 1, 1);
+  assert(1 || exit1(), 1);
 }
 
 void logicals() {
   printf("test: logicals\n");
 
   logical_and();
+  logical_or();
 }
 
 int main() {

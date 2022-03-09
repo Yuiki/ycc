@@ -571,9 +571,21 @@ Node *logical_and() {
   }
 }
 
+// logical_and ("||" logical_or)*
+Node *logical_or() {
+  Node *node = logical_and();
+  for (;;) {
+    if (consume("||")) {
+      node = new_node_child(ND_LOR, node, logical_or());
+    } else {
+      return node;
+    }
+  }
+}
+
 // equality (("=" | "+=") assign)?
 Node *assign() {
-  Node *node = logical_and();
+  Node *node = logical_or();
   if (consume("=")) {
     node = new_node_child(ND_ASSIGN, node, assign());
   }
