@@ -448,7 +448,7 @@ Node *primary() {
   return new_node_num(expect_number());
 }
 
-// "sizeof" unary | ("*" | "&") unary | ("+" | "-")? primary
+// ("sizeof" | "*" | "&" | "!") unary | ("+" | "-")? primary
 Node *unary() {
   if (consume("sizeof")) {
     Node *child = unary();
@@ -466,6 +466,10 @@ Node *unary() {
     node->lhs = unary();
     node->type->ptr_to = node->lhs->type;
     return node;
+  }
+
+  if (consume("!")) {
+    return new_node_child(ND_EQ, unary(), new_node_num(0));
   }
 
   if (consume("+")) {

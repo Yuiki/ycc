@@ -566,6 +566,15 @@ int decs() {
   return 0;
 }
 
+int nots() {
+  printf("test: nots\n");
+
+  assert(1, !0);
+  assert(0, !!0);
+
+  return 0;
+}
+
 int main() {
   arith();
   cmp();
@@ -586,5 +595,6 @@ int main() {
   init_lvars();
   incs();
   decs();
+  nots();
   return 0;
 }

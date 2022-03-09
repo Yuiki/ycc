@@ -78,7 +78,7 @@ bool tokenize_reserved(char **pp, Token **pcur) {
   if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' ||
       *p == ')' || *p == '<' || *p == '>' || *p == ';' || *p == '=' ||
       *p == '{' || *p == '}' || *p == ',' || *p == '*' || *p == '&' ||
-      *p == '[' || *p == ']') {
+      *p == '[' || *p == ']' || *p == '!') {
     *pcur = new_token(TK_RESERVED, *(pcur), (*pp)++);
     (*pcur)->len = 1;
     return true;
