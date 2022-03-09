@@ -678,14 +678,16 @@ Node *whilen() {
   return node;
 }
 
-// "for" "(" expr? ";" expr? ";" expr? ")" stmt
+// "for" "(" (var_decla? | expr? ";") expr? ";" expr? ")" stmt
 Node *forn() {
   expect("for");
 
   Node *node = new_node(ND_FOR, NULL);
   expect("(");
 
-  if (!consume(";")) {
+  if (is_type(token)) { // declaration
+    node->init = var_decla();
+  } else if (!consume(";")) {
     node->init = expr();
     expect(";");
   }

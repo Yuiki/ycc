@@ -230,6 +230,24 @@ void for4() {
   assert(r, 25);
 }
 
+void for5() {
+  int r = 0;
+  for (int i = 1; i <= 10; i++) {
+    r += i;
+  }
+  assert(r, 55);
+}
+
+void for6() {
+  int r = 0;
+  int i = 1;
+  for (int x; i <= 10; i++) {
+    x = 0;
+    r += i;
+  }
+  assert(r, 55);
+}
+
 void fors() {
   printf("test: fors\n");
 
@@ -237,6 +255,8 @@ void fors() {
   for2();
   for3();
   for4();
+  for5();
+  for6();
 }
 
 void call1() { foo(); }
