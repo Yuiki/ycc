@@ -294,6 +294,15 @@ void gen_div(Node *node) {
   printf("  push rax\n");
 }
 
+void gen_mod(Node *node) {
+  gen_child(node);
+
+  printf("  cqo\n");
+  printf("  idiv rdi\n");
+
+  printf("  push rdx\n");
+}
+
 void gen_eq(Node *node) {
   gen_child(node);
 
@@ -432,6 +441,9 @@ void gen(Node *node) {
     break;
   case ND_DIV:
     gen_div(node);
+    break;
+  case ND_MOD:
+    gen_mod(node);
     break;
   case ND_EQ:
     gen_eq(node);

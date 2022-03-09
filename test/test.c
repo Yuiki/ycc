@@ -38,6 +38,9 @@ void arith() {
   assert((3 + 5) / 2, 4);
   assert(-10 + 20, 10);
   assert(+5 - 4, 1);
+
+  assert(17 % 7, 3);
+  assert(32 % 2, 0);
 }
 
 void cmp() {

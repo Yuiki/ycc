@@ -495,7 +495,7 @@ Node *unary() {
   return postfix();
 }
 
-// unary ("*" unary | "/" unary)*
+// unary (("*" | "/" | "%") unary)*
 Node *mul() {
   Node *node = unary();
 
@@ -504,6 +504,8 @@ Node *mul() {
       node = new_node_child(ND_MUL, node, unary());
     } else if (consume("/")) {
       node = new_node_child(ND_DIV, node, unary());
+    } else if (consume("%")) {
+      node = new_node_child(ND_MOD, node, unary());
     } else {
       return node;
     }
