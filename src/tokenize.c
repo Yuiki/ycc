@@ -1,6 +1,7 @@
 #include "ycc.h"
 #include <ctype.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -133,6 +134,19 @@ bool tokenize_str(char **pp, Token **pcur) {
   return false;
 }
 
+bool tokenize_char(char **pp, Token **pcur) {
+  if (**pp == '\'') {
+    if (*(*pp + 2) != '\'') {
+      error_at(*pp, "char literal is invalid");
+    }
+
+    *pcur = new_token(TK_CHAR, *pcur, *pp + 1);
+    (*pp) += 3;
+    return true;
+  }
+  return false;
+}
+
 bool tokenize_ident(char **pp, Token **pcur) {
   char *start = *pp;
   while (is_alnum(**pp)) {
@@ -169,6 +183,10 @@ Token *tokenize(char *p) {
     }
 
     if (tokenize_str(&p, &cur)) {
+      continue;
+    }
+
+    if (tokenize_char(&p, &cur)) {
       continue;
     }
 

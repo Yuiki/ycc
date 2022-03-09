@@ -414,7 +414,23 @@ Node *str() {
   return node;
 }
 
-// "(" expr ")" | ident (("(" func_call) | var )? | str | num
+Node *character() {
+  Node *node = new_node(ND_NUM, new_type(CHAR));
+  node->val = token->str[0];
+  token = token->next;
+  return node;
+}
+
+// character | integer
+Node *constant() {
+  if (token->kind == TK_CHAR) {
+    return character();
+  }
+
+  return new_node_num(expect_number());
+}
+
+// "(" expr ")" | ident (("(" func_call) | var )? | str | constant
 Node *primary() {
   if (consume("(")) {
     Node *node = expr();
@@ -434,7 +450,7 @@ Node *primary() {
     return str();
   }
 
-  return new_node_num(expect_number());
+  return constant();
 }
 
 // primary ("++" | "--")*

@@ -104,7 +104,8 @@ typedef enum {
   TK_RESERVED, // symbol
   TK_IDENT,    // identifier
   TK_NUM,
-  TK_STR, // string literal
+  TK_STR,  // string literal
+  TK_CHAR, // char constant
   TK_EOF,
 } TokenKind;
 

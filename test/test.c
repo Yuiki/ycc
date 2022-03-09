@@ -475,11 +475,17 @@ void char2() {
   print(x[0]);
 }
 
+void char3() {
+  char c = 'a';
+  assert(c, 98);
+}
+
 void chars() {
   printf("test: chars\n");
 
   char1();
   char2();
+  char3();
 }
 
 void strlit() {
