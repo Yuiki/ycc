@@ -32,7 +32,7 @@ typedef enum {
   ND_NOP,        // no-op
 } NodeKind;
 
-typedef enum { CHAR, INT, VOID, PTR, ARRAY } TypeKind;
+typedef enum { CHAR, INT, VOID, PTR, ARRAY, ENUM } TypeKind;
 
 typedef struct Type Type;
 
@@ -40,9 +40,11 @@ struct Type {
   TypeKind kind;
   struct Type *ptr_to; // pointer if ty = PTR
   size_t array_size;
+  char *name;   // if ty = ENUM
+  int name_len; // if ty = ENUM
 };
 
-typedef enum { GVAR, LVAR } IdentKind;
+typedef enum { GVAR, LVAR, ENUM_CONST } IdentKind;
 
 typedef struct Ident Ident;
 
@@ -53,6 +55,7 @@ struct Ident {
   IdentKind kind;
   int offset; // offset from RBP if kind = VAR
   Type *type; // if kind = VAR
+  int value;  // if kind = ENUM_CONST
 };
 
 typedef struct Scope Scope;

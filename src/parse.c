@@ -18,6 +18,28 @@ Node *stmt();
 
 Node *equality();
 
+Node *new_node(NodeKind kind, Type *type) {
+  Node *node = calloc(1, sizeof(Node));
+  node->kind = kind;
+  node->type = type;
+  return node;
+}
+
+Type *new_type(TypeKind ty) {
+  Type *type = calloc(1, sizeof(Type));
+  type->kind = ty;
+  return type;
+}
+
+Ident *new_ident(Type *type, char *name, int name_len, IdentKind kind) {
+  Ident *ident = calloc(1, sizeof(Ident));
+  ident->name = name;
+  ident->len = name_len;
+  ident->kind = kind;
+  ident->type = type;
+  return ident;
+}
+
 // return true if the next token is `op`
 // Otherwise, return false
 bool is_next(char *op) {
@@ -26,27 +48,6 @@ bool is_next(char *op) {
     return false;
   }
   return true;
-}
-
-TypeKind type_of(Token *token) {
-  if (is_next("char")) {
-    return CHAR;
-  }
-  if (is_next("int")) {
-    return INT;
-  }
-  if (is_next("void")) {
-    return VOID;
-  }
-  return -1;
-}
-
-bool is_type(Token *token) { return type_of(token) != -1; }
-
-Type *new_type(TypeKind ty) {
-  Type *type = calloc(1, sizeof(Type));
-  type->kind = ty;
-  return type;
 }
 
 // Advance `token` and return true if the next token is `op`
@@ -91,14 +92,52 @@ int expect_number() {
   return val;
 }
 
-Type *expect_type() {
-  TypeKind ty_kind = type_of(token);
-  if (ty_kind == -1) {
+// "enum" "{" ident ("," ident)* ","? "}"
+void enum_specifier() {
+  expect("enum");
+  expect("{");
+  for (int i = 0;; i++) {
+    Token *tok = consume_ident();
+    if (tok == NULL) {
+      error_at(token->str, "not identifier");
+    }
+
+    Ident *ident = new_ident(new_type(INT), tok->str, tok->len, ENUM_CONST);
+    ident->value = i;
+    ident->next = scope->ident;
+    scope->ident = ident;
+
+    if (!consume(",")) {
+      break;
+    }
+  }
+  consume(",");
+  expect("}");
+}
+
+Type *consume_type(Token *token) {
+  if (consume("char")) {
+    return new_type(CHAR);
+  }
+  if (consume("int")) {
+    return new_type(INT);
+  }
+  if (consume("void")) {
+    return new_type(VOID);
+  }
+  if (is_next("enum")) {
+    enum_specifier();
+    return new_type(ENUM);
+  }
+  return NULL;
+}
+
+Type *expect_type_specifier() {
+  Type *type = consume_type(token);
+  if (type == NULL) {
     error_at(token->str, "unknown type");
   }
-  token = token->next;
 
-  Type *type = new_type(ty_kind);
   while (consume("*")) {
     Type *new_ty = new_type(PTR);
     new_ty->ptr_to = type;
@@ -108,14 +147,12 @@ Type *expect_type() {
   return type;
 }
 
-bool at_eof() { return token->kind == TK_EOF; }
-
-Node *new_node(NodeKind kind, Type *type) {
-  Node *node = calloc(1, sizeof(Node));
-  node->kind = kind;
-  node->type = type;
-  return node;
+bool is_next_decla() {
+  return is_next("char") || is_next("int") || is_next("void") ||
+         is_next("enum");
 }
+
+bool at_eof() { return token->kind == TK_EOF; }
 
 Node *new_node_child(NodeKind kind, Node *lhs, Node *rhs) {
   Type *type;
@@ -166,15 +203,6 @@ Ident *find_var(Token *tok, bool current) {
   return NULL;
 }
 
-Ident *create_ident(Type *type, char *name, int name_len, IdentKind kind) {
-  Ident *ident = calloc(1, sizeof(Ident));
-  ident->name = name;
-  ident->len = name_len;
-  ident->kind = kind;
-  ident->type = type;
-  return ident;
-}
-
 Node *create_var(Token *tok, Type *type) {
   Node *node = new_node(ND_LVAR, type);
 
@@ -183,7 +211,7 @@ Node *create_var(Token *tok, Type *type) {
     error_at(token->str, "変数が定義済みです");
   }
 
-  lvar = create_ident(type, tok->str, tok->len, LVAR);
+  lvar = new_ident(type, tok->str, tok->len, LVAR);
   lvar->next = scope->ident;
   scope->ident = lvar;
 
@@ -213,12 +241,9 @@ int create_str(char *value, int len) {
 
 // type ident
 Type *type_ident(Token **ident) {
-  Type *type = expect_type();
+  Type *type = expect_type_specifier();
 
   *ident = consume_ident();
-  if (*ident == NULL) {
-    error_at(token->str, "it is not identifier");
-  }
   return type;
 }
 
@@ -253,9 +278,13 @@ Node *create_arr_elem(Node *arr, Node *offset) {
 
 // type-ident (array-decla)?
 // ("=" (equality | ("{" equality? ("," equality)* "}")))? ";"
-Node *var_decla() {
+Node *decla() {
   Token *ident;
   Type *type = type_ident(&ident);
+  if (ident == NULL) {
+    expect(";");
+    return new_node(ND_NOP, NULL);
+  }
 
   Type *arr_type;
   int arr_len;
@@ -397,8 +426,16 @@ Node *var(Token *name) {
     return lvar(var->type, var->offset);
   }
 
-  // global var
-  return gvar(name, var->type);
+  if (var->kind == GVAR) {
+    return gvar(name, var->type);
+  }
+
+  if (var->kind == ENUM_CONST) {
+    return new_node_num(var->value);
+  }
+
+  error_at(name->str, "unknown var kind");
+  return NULL; // not reachable
 }
 
 Node *str() {
@@ -622,20 +659,26 @@ void begin_scope() {
 
 void end_scope() { scope = scope->parent; }
 
-// "{" stmt* "}"
-Node *block() {
+// "{" (stmt | decla)* "}"
+Node *compound_stmt() {
   expect("{");
 
   Node *node = new_node(ND_BLOCK, NULL);
 
   Node *head = NULL;
   while (!consume("}")) {
+    Node *child;
+    if (is_next_decla()) {
+      child = decla();
+    } else {
+      child = stmt();
+    }
     if (head == NULL) {
-      head = stmt();
+      head = child;
       node->body = head;
       continue;
     }
-    head->next = stmt();
+    head->next = child;
     head = head->next;
   }
 
@@ -699,15 +742,15 @@ Node *whilen() {
   return node;
 }
 
-// "for" "(" (var_decla? | expr? ";") expr? ";" expr? ")" stmt
+// "for" "(" (decla? | expr? ";") expr? ";" expr? ")" stmt
 Node *forn() {
   expect("for");
 
   Node *node = new_node(ND_FOR, NULL);
   expect("(");
 
-  if (is_type(token)) { // declaration
-    node->init = var_decla();
+  if (is_next_decla()) { // declaration
+    node->init = decla();
   } else if (!consume(";")) {
     node->init = expr();
     expect(";");
@@ -728,7 +771,7 @@ Node *forn() {
   return node;
 }
 
-// cont | breakn | ret | ifn | whilen | forn | block | var_decla | expr ";"
+// cont | breakn | ret | ifn | whilen | forn | compound_stmt | expr ";"
 Node *stmt() {
   if (is_next("continue")) {
     return cont();
@@ -744,11 +787,9 @@ Node *stmt() {
     return forn();
   } else if (is_next("{")) {
     begin_scope();
-    Node *b = block();
+    Node *stmts = compound_stmt();
     end_scope();
-    return b;
-  } else if (is_type(token)) { // declaration
-    return var_decla();
+    return stmts;
   }
 
   Node *node = expr();
@@ -756,7 +797,7 @@ Node *stmt() {
   return node;
 }
 
-// "(" (")" | type ("," expr)* ")") block
+// "(" (")" | type ("," expr)* ")") compound_stmt
 Node *func(Token *name) {
   begin_scope();
 
@@ -771,21 +812,24 @@ Node *func(Token *name) {
     Token *param;
     Type *type = type_ident(&param);
 
-    Node *var = create_var(param, type);
-    if (head == NULL) {
-      head = var;
-      node->params = head;
-    } else {
-      head->next = var;
-      head = head->next;
+    if (param != NULL) {
+      Node *var = create_var(param, type);
+      if (head == NULL) {
+        head = var;
+        node->params = head;
+      } else {
+        head->next = var;
+        head = head->next;
+      }
     }
+
     if (!consume(",")) {
       expect(")");
       break;
     }
   }
 
-  node->block = block();
+  node->block = compound_stmt();
 
   node->lvars_size = lvars_size + ((16 - (lvars_size % 16)) % 16);
   lvars_size = 0;
@@ -818,18 +862,24 @@ void program() {
   Ident **head = &scope->ident;
 
   Token *ident;
-  for (int i = 0; !at_eof(); i++) {
+  for (int i = 0; !at_eof();) {
     Type *type = type_ident(&ident);
+    if (ident == NULL) {
+      expect(";");
+      continue;
+    }
 
     if (is_next("(")) { // function
-      globals[i] = func(ident);
+      Node *t = func(ident);
+      globals[i] = t;
     } else { // global var
       Node *node = global_var(ident, type);
       globals[i] = node;
 
-      Ident *ident = create_ident(node->type, node->name, node->name_len, GVAR);
+      Ident *ident = new_ident(node->type, node->name, node->name_len, GVAR);
       *head = ident;
       head = &ident->next;
     }
+    i++;
   }
 }

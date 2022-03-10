@@ -639,6 +639,14 @@ void scopes() {
   assert(j, 3);
 }
 
+enum { BAZ };
+void enumeration() {
+  enum { FOO, BAR };
+  assert(FOO, 0);
+  assert(BAR, 1);
+  assert(BAZ, 0);
+}
+
 int main() {
   arith();
   cmp();
@@ -663,5 +671,6 @@ int main() {
   assigns();
   logicals();
   scopes();
+  enumeration();
   return 0;
 }
