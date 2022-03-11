@@ -719,6 +719,18 @@ void switchs() {
   assert(switch3(4), 40);
 }
 
+struct TestStruct {
+  int foo;
+  char bar;
+};
+
+void structs() {
+  struct TestStruct *a = calloc(1, 8);
+  int b = 100;
+  struct TestStruct *c = calloc(1, 8);
+  assert(b, 100);
+}
+
 int main() {
   arith();
   cmp();
@@ -745,5 +757,6 @@ int main() {
   scopes();
   enumeration();
   switchs();
+  structs();
   return 0;
 }

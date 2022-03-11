@@ -18,6 +18,8 @@ Node *stmt();
 
 Node *equality();
 
+Type *type_ident(Token **ident);
+
 int case_label;
 
 Node *new_node(NodeKind kind, Type *type) {
@@ -50,6 +52,11 @@ bool is_next(char *op) {
     return false;
   }
   return true;
+}
+
+bool is_next_decla() {
+  return is_next("char") || is_next("int") || is_next("void") ||
+         is_next("enum") || is_next("struct");
 }
 
 // Advance `token` and return true if the next token is `op`
@@ -117,6 +124,77 @@ void enum_specifier() {
   expect("}");
 }
 
+Type *find_type(Token *name, bool current) {
+  for (Scope *sc = scope; sc; sc = sc->parent) {
+    for (Type *type = sc->type; type; type = type->next) {
+      if (type && type->name_len == name->len &&
+          !memcmp(name->str, type->name, type->name_len)) {
+        return type;
+      }
+    }
+    if (current) {
+      break;
+    }
+  }
+  return NULL;
+}
+
+Type *create_struct(Token *name) {
+  Type *ty = find_type(name, true);
+  if (ty) {
+    error_at(token->str, "the variable is already declared");
+  }
+
+  ty = new_type(STRUCT);
+  ty->needs_specifier = true;
+  ty->name = name->str;
+  ty->name_len = name->len;
+  StructMember **member_head = &ty->member;
+  int currSize = 0;
+
+  while (is_next_decla()) {
+    Token *member_name;
+    Type *member_ty = type_ident(&member_name);
+
+    StructMember *member = calloc(1, sizeof(StructMember));
+    member->type = member_ty;
+    member->name = member_name->str;
+    member->name_len = member_name->len;
+    member->offset = offset_of(currSize, member->type);
+    currSize = member->offset + size_of(member->type);
+
+    *member_head = member;
+    member_head = &member->next;
+
+    consume(";");
+  }
+
+  ty->next = scope->type;
+  scope->type = ty;
+
+  return ty;
+}
+
+// "struct" ident ("{" (type_ident ";")* "}")?
+Type *struct_specifier() {
+  expect("struct");
+
+  Token *name = consume_ident();
+  if (name == NULL) {
+    error_at(name->str, "not identifier");
+  }
+
+  if (!consume("{")) {
+    return find_type(name, false);
+  }
+
+  Type *ty = create_struct(name);
+
+  expect("}");
+
+  return ty;
+}
+
 Type *consume_type(Token *token) {
   if (consume("char")) {
     return new_type(CHAR);
@@ -130,6 +208,9 @@ Type *consume_type(Token *token) {
   if (is_next("enum")) {
     enum_specifier();
     return new_type(ENUM);
+  }
+  if (is_next("struct")) {
+    return struct_specifier();
   }
   return NULL;
 }
@@ -147,11 +228,6 @@ Type *expect_type_specifier() {
   }
 
   return type;
-}
-
-bool is_next_decla() {
-  return is_next("char") || is_next("int") || is_next("void") ||
-         is_next("enum");
 }
 
 bool at_eof() { return token->kind == TK_EOF; }
@@ -210,7 +286,7 @@ Node *create_var(Token *tok, Type *type) {
 
   Ident *lvar = find_var(tok, true);
   if (lvar) {
-    error_at(token->str, "変数が定義済みです");
+    error_at(token->str, "the variable is already declared");
   }
 
   lvar = new_ident(type, tok->str, tok->len, LVAR);

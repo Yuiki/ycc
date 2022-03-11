@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef enum {
@@ -35,16 +36,29 @@ typedef enum {
   ND_NOP,        // no-op
 } NodeKind;
 
-typedef enum { CHAR, INT, VOID, PTR, ARRAY, ENUM } TypeKind;
+typedef enum { CHAR, INT, VOID, PTR, ARRAY, ENUM, STRUCT } TypeKind;
 
 typedef struct Type Type;
 
+typedef struct StructMember StructMember;
+
 struct Type {
   TypeKind kind;
-  struct Type *ptr_to; // pointer if ty = PTR
+  Type *ptr_to; // pointer if ty = PTR
   size_t array_size;
-  char *name;   // if ty = ENUM
-  int name_len; // if ty = ENUM
+  char *name;           // if ty = ENUM, STRUCT
+  int name_len;         // if ty = ENUM, STRUCT
+  bool needs_specifier; // if ty = STRUCT
+  StructMember *member; // if ty = STRUCT
+  Type *next;           // if parent is Scope
+};
+
+struct StructMember {
+  Type *type;
+  char *name;
+  int name_len;
+  int offset;
+  StructMember *next;
 };
 
 typedef enum { GVAR, LVAR, ENUM_CONST } IdentKind;
@@ -65,6 +79,7 @@ typedef struct Scope Scope;
 
 struct Scope {
   Ident *ident; // head
+  Type *type;   // head
   Scope *parent;
 };
 
@@ -173,3 +188,5 @@ char *read_file(char *path);
 // size.c
 
 int size_of(Type *type);
+
+int offset_of(int curr_size, Type *type);
