@@ -162,7 +162,7 @@ extern Token *token;
 extern Str *strs;
 
 // TODO: support >100
-extern Node *globals[100];
+extern Node *globals[200];
 
 // tokenize.c
 

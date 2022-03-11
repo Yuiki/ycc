@@ -10,7 +10,7 @@ int lvars_size;
 
 Str *strs;
 
-Node *globals[100];
+Node *globals[200];
 
 Node *expr();
 
@@ -569,7 +569,7 @@ Node *primary() {
   return constant();
 }
 
-// primary ("++" | "--")*
+// primary ("++" | "--" | ("->" ident))*
 Node *postfix() {
   Node *node = primary();
   for (;;) {
@@ -585,6 +585,30 @@ Node *postfix() {
       Node *assign = new_node_child(ND_ASSIGN, node, sub);
       Node *add = new_node_child(ND_ADD, assign, new_node_num(1));
       node = add;
+      continue;
+    }
+    if (consume("->")) {
+      Token *ident = consume_ident();
+      if (ident == NULL) {
+        error_at(token->str, "not identifier");
+      }
+
+      StructMember *found = NULL;
+      for (StructMember *member = node->type->ptr_to->member; member;
+           member = member->next) {
+        if (member->name_len == ident->len &&
+            !memcmp(member->name, ident->str, member->name_len)) {
+          found = member;
+        }
+      }
+      if (found == NULL) {
+        error_at(token->str, "the member is not defined");
+      }
+
+      Node *add = new_node_child(ND_ADD, node, new_node_num(found->offset));
+      Node *deref = new_node(ND_DEREF, add->type);
+      deref->lhs = add;
+      node = deref;
       continue;
     }
     return node;

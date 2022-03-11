@@ -742,11 +742,26 @@ struct TestStruct2 {
   struct TestStruct *test;
 };
 
-void structs() {
-  struct TestStruct *a = calloc(1, 8);
+void struct1() {
+  struct TestStruct *a = calloc(1, sizeof(struct TestStruct));
   int b = 100;
-  struct TestStruct2 *c = calloc(1, 8);
+  struct TestStruct2 *c = calloc(1, sizeof(struct TestStruct2));
   assert(b, 100);
+}
+
+void struct2() {
+  struct TestStruct *a = calloc(1, sizeof(struct TestStruct));
+  a->foo = 112;
+  a->bar = 123;
+  assert(a->foo, 112);
+  assert(a->bar, 123);
+}
+
+void structs() {
+  printf("test: structs\n");
+
+  struct1();
+  struct2();
 }
 
 int main() {
