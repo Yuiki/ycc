@@ -408,6 +408,17 @@ void sizeof6() { assert(sizeof(1), 4); }
 
 void sizeof7() { assert(sizeof(sizeof(1)), 4); }
 
+void sizeof8() { assert(sizeof(int), 4); }
+
+void sizeof9() { assert(sizeof(char *), 8); }
+
+void sizeof10() {
+  struct Foo {
+    int bar;
+  };
+  assert(sizeof(struct Foo), 4);
+}
+
 void sizeofs() {
   printf("test: sizeofs\n");
 
@@ -418,6 +429,9 @@ void sizeofs() {
   sizeof5();
   sizeof6();
   sizeof7();
+  sizeof8();
+  sizeof9();
+  sizeof10();
 }
 
 void arr1() { int a[10]; }
@@ -724,10 +738,14 @@ struct TestStruct {
   char bar;
 };
 
+struct TestStruct2 {
+  struct TestStruct *test;
+};
+
 void structs() {
   struct TestStruct *a = calloc(1, 8);
   int b = 100;
-  struct TestStruct *c = calloc(1, 8);
+  struct TestStruct2 *c = calloc(1, 8);
   assert(b, 100);
 }
 

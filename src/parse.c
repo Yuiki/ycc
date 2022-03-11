@@ -44,9 +44,7 @@ Ident *new_ident(Type *type, char *name, int name_len, IdentKind kind) {
   return ident;
 }
 
-// return true if the next token is `op`
-// Otherwise, return false
-bool is_next(char *op) {
+bool is_op(Token *token, char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len ||
       memcmp(token->str, op, token->len)) {
     return false;
@@ -54,10 +52,16 @@ bool is_next(char *op) {
   return true;
 }
 
-bool is_next_decla() {
-  return is_next("char") || is_next("int") || is_next("void") ||
-         is_next("enum") || is_next("struct");
+// return true if the next token is `op`
+// Otherwise, return false
+bool is_next(char *op) { return is_op(token, op); }
+
+bool is_decla(Token *tok) {
+  return is_op(tok, "char") || is_op(tok, "int") || is_op(tok, "void") ||
+         is_op(tok, "enum") || is_op(tok, "struct");
 }
+
+bool is_next_decla() { return is_decla(token); }
 
 // Advance `token` and return true if the next token is `op`
 // Otherwise, return false
@@ -587,11 +591,19 @@ Node *postfix() {
   }
 }
 
-// ("sizeof" | "&" | "*" | "+" | "-" | "!") unary | postfix
+// ("&" | "*" | "+" | "-" | "!") unary | "sizeof" (unary | "(" type-name ")")
+// postfix
 Node *unary() {
   if (consume("sizeof")) {
-    Node *child = unary();
-    return new_node_num(size_of(child->type));
+    Type *type;
+    if (is_next("(") && is_decla(token->next)) {
+      expect("(");
+      type = expect_type_specifier();
+      expect(")");
+    } else {
+      type = unary()->type;
+    }
+    return new_node_num(size_of(type));
   }
 
   if (consume("&")) {
