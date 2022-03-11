@@ -569,7 +569,34 @@ Node *primary() {
   return constant();
 }
 
-// primary ("++" | "--" | ("->" ident))*
+StructMember *find_member(StructMember *root, Token *ident) {
+  for (StructMember *member = root; member; member = member->next) {
+    if (member->name_len == ident->len &&
+        !memcmp(member->name, ident->str, member->name_len)) {
+      return member;
+    }
+  }
+  return NULL;
+}
+
+Node *member(StructMember *root_member, Node *root_node) {
+  Token *ident = consume_ident();
+  if (ident == NULL) {
+    error_at(token->str, "not identifier");
+  }
+
+  StructMember *found = find_member(root_member, ident);
+  if (found == NULL) {
+    error_at(token->str, "the member is not defined");
+  }
+
+  Node *add = new_node_child(ND_ADD, root_node, new_node_num(found->offset));
+  Node *deref = new_node(ND_DEREF, add->type);
+  deref->lhs = add;
+  return deref;
+}
+
+// primary ("++" | "--" | (("->" | ".") ident))*
 Node *postfix() {
   Node *node = primary();
   for (;;) {
@@ -588,27 +615,11 @@ Node *postfix() {
       continue;
     }
     if (consume("->")) {
-      Token *ident = consume_ident();
-      if (ident == NULL) {
-        error_at(token->str, "not identifier");
-      }
-
-      StructMember *found = NULL;
-      for (StructMember *member = node->type->ptr_to->member; member;
-           member = member->next) {
-        if (member->name_len == ident->len &&
-            !memcmp(member->name, ident->str, member->name_len)) {
-          found = member;
-        }
-      }
-      if (found == NULL) {
-        error_at(token->str, "the member is not defined");
-      }
-
-      Node *add = new_node_child(ND_ADD, node, new_node_num(found->offset));
-      Node *deref = new_node(ND_DEREF, add->type);
-      deref->lhs = add;
-      node = deref;
+      node = member(node->type->ptr_to->member, node);
+      continue;
+    }
+    if (consume(".")) {
+      node = member(node->type->member, node);
       continue;
     }
     return node;

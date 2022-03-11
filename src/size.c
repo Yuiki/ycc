@@ -17,19 +17,19 @@ int size_of(Type *type) {
     int max_size = 0;
     int size = 0;
     for (StructMember *member = type->member; member; member = member->next) {
-      int size = size_of(member->type);
-      if (size > max_size) {
-        max_size = size;
+      int s = size_of(member->type);
+      if (s > max_size) {
+        max_size = s;
       }
 
-      size = member->offset + size;
+      size = member->offset + s;
     }
 
     if (max_size == 0) {
       return 0;
     }
 
-    int padd = max_size - (size % max_size);
+    int padd = (max_size - (size % max_size)) % max_size;
     return size + padd;
   }
   default:
@@ -40,6 +40,6 @@ int size_of(Type *type) {
 
 int offset_of(int curr_size, Type *type) {
   int size = size_of(type);
-  int padd = size - (curr_size % size);
+  int padd = (size - (curr_size % size)) % size;
   return padd + curr_size;
 }

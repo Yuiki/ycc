@@ -757,11 +757,20 @@ void struct2() {
   assert(a->bar, 123);
 }
 
+void struct3() {
+  struct TestStruct a;
+  a.foo = 10;
+  a.bar = 20;
+  assert(a.foo, 10);
+  assert(a.bar, 20);
+}
+
 void structs() {
   printf("test: structs\n");
 
   struct1();
   struct2();
+  struct3();
 }
 
 int main() {
