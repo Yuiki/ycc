@@ -80,7 +80,7 @@ bool tokenize_reserved(char **pp, Token **pcur) {
   if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '%' ||
       *p == '(' || *p == ')' || *p == '<' || *p == '>' || *p == ';' ||
       *p == '=' || *p == '{' || *p == '}' || *p == ',' || *p == '*' ||
-      *p == '&' || *p == '[' || *p == ']' || *p == '!') {
+      *p == '&' || *p == '[' || *p == ']' || *p == '!' || *p == ':') {
     *pcur = new_token(TK_RESERVED, *(pcur), (*pp)++);
     (*pcur)->len = 1;
     return true;
@@ -91,8 +91,9 @@ bool tokenize_reserved(char **pp, Token **pcur) {
 
 bool tokenize_keywords(char **p, Token **cur) {
   char *kws[] = {
-      "return", "if",   "else",   "while", "for",      "int",
-      "char",   "void", "sizeof", "break", "continue", "enum",
+      "return",   "if",   "else",   "while",  "for",
+      "int",      "char", "void",   "sizeof", "break",
+      "continue", "enum", "switch", "case",   "default",
   };
   int len = sizeof(kws) / sizeof(char *);
   for (int i = 0; i < len; i++) {

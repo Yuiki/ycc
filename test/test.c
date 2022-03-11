@@ -641,10 +641,35 @@ void scopes() {
 
 enum { BAZ };
 void enumeration() {
+  printf("test: enumeration\n");
+
   enum { FOO, BAR };
   assert(FOO, 0);
   assert(BAR, 1);
   assert(BAZ, 0);
+}
+
+int switch1(int i) {
+  switch (i) {
+  case BAZ:
+    return 10;
+  case 1:
+    return 20;
+  case 'a':
+    return 30;
+  default:
+    return 40;
+  }
+}
+
+void switchs() {
+  printf("test: switchs\n");
+
+  assert(switch1(0), 10);
+  assert(switch1(1), 20);
+  assert(switch1(97), 30);
+  assert(switch1(3), 40);
+  assert(switch1(4), 40);
 }
 
 int main() {
@@ -672,5 +697,6 @@ int main() {
   logicals();
   scopes();
   enumeration();
+  switchs();
   return 0;
 }

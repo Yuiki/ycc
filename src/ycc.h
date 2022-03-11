@@ -26,6 +26,9 @@ typedef enum {
   ND_BREAK,      // break
   ND_CONTINUE,   // continue
   ND_IF,         // if
+  ND_SWITCH,     // switch
+  ND_CASE,       // case
+  ND_DEFAULT,    // case
   ND_WHILE,      // while
   ND_FOR,        // for
   ND_BLOCK,      // {}
@@ -84,14 +87,14 @@ struct Node {
   Node *rhs; // right side
 
   Node *init; // init expr if kind = ND_FOR
-  Node *cond; // cond expr if kind = ND_IF, ND_WHILE, ND_FOR
+  Node *cond; // cond expr if kind = ND_IF, ND_WHILE, ND_FOR, ND_SWITCH
   Node *step; // step expr if kind = ND_FOR
-  Node *then; // then stmt if kind = ND_IF, ND_WHILE
+  Node *then; // then stmt if kind = ND_IF, ND_WHILE, ND_SWITCH
   Node *els;  // else stmt if kind = ND_IF
 
   Node *body; // if kind = ND_BLOCK
 
-  int val; // the number if kind = ND_NUM
+  int val; // the number if kind = ND_NUM, ND_CASE
 
   int offset; // if kind = ND_LVAR
 
@@ -110,7 +113,8 @@ struct Node {
   char *name;   // var name if kind = ND_GVAR, ND_GVAR_DECLA
   int name_len; // var name len if kind = ND_GVAR, ND_GVAR_DECLA
 
-  int index; // if kind = ND_STR
+  int g_index; // if kind = ND_STR
+  int label;   // if kind = ND_CASE
 };
 
 typedef enum {

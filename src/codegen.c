@@ -53,7 +53,7 @@ void gen_val(Node *node) {
 void gen_num(Node *node) { printf("  push %d\n", node->val); }
 
 void gen_str(Node *node) {
-  printf("  lea rax, .LC%d[rip]\n", node->index);
+  printf("  lea rax, .LC%d[rip]\n", node->g_index);
 
   printf("  push rax\n");
 }
@@ -209,6 +209,36 @@ void gen_if(Node *node) {
     gen(node->els);
   }
   printf(".Cend%d:\n", idx);
+}
+
+void gen_switch(Node *node) {
+  gen(node->cond);
+  printf("  pop rax\n");
+
+  Node *head = node->then;
+  if (head->kind == ND_BLOCK) {
+    head = head->body;
+  }
+  int default_label = -1;
+  for (; head; head = head->next) {
+    if (head->kind == ND_CASE) {
+      printf("  cmp rax, %d\n", head->val);
+      printf("  je .Lcase%d\n", head->label);
+    }
+    if (head->kind == ND_DEFAULT) {
+      default_label = head->label;
+    }
+  }
+  if (default_label >= 0) {
+    printf("  jmp .Lcase%d\n", default_label);
+  }
+
+  gen(node->then);
+}
+
+void gen_case(Node *node) {
+  printf(".Lcase%d:\n", node->label);
+  gen(node->rhs);
 }
 
 void gen_while(Node *node) {
@@ -482,8 +512,15 @@ void gen(Node *node) {
   case ND_LOR:
     gen_lor(node);
     break;
+  case ND_SWITCH:
+    gen_switch(node);
+    break;
+  case ND_CASE:
+  case ND_DEFAULT:
+    gen_case(node);
+    break;
   case ND_NOP:
-    return;
+    break;
   default:
     error("illegal node [NodeKind: %d]\n", node->kind);
   }

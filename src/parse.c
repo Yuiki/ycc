@@ -18,6 +18,8 @@ Node *stmt();
 
 Node *equality();
 
+int case_label;
+
 Node *new_node(NodeKind kind, Type *type) {
   Node *node = calloc(1, sizeof(Node));
   node->kind = kind;
@@ -442,7 +444,7 @@ Node *str() {
   Node *node = new_node(ND_STR, new_type(ARRAY));
   node->type->array_size = token->len;
   node->type->ptr_to = new_type(CHAR);
-  node->index = create_str(token->str, token->len);
+  node->g_index = create_str(token->str, token->len);
 
   token = token->next;
   return node;
@@ -635,7 +637,7 @@ Node *logical_or() {
   }
 }
 
-// equality (("=" | "+=") assign)?
+// logical_or (("=" | "+=") assign)?
 Node *assign() {
   Node *node = logical_or();
   if (consume("=")) {
@@ -658,6 +660,36 @@ void begin_scope() {
 }
 
 void end_scope() { scope = scope->parent; }
+
+// "case" expr ":" statement
+Node *case_stmt() {
+  expect("case");
+
+  Node *node = new_node(ND_CASE, NULL);
+  Node *cond = logical_or();
+  // TODO: suppport compile-time calcuration
+  if (cond->kind != ND_NUM) {
+    error_at(token->str, "should be constant");
+  }
+  node->val = cond->val;
+  expect(":");
+  node->rhs = stmt();
+  node->label = case_label++;
+
+  return node;
+}
+
+// "default" ":" statement
+Node *default_stmt() {
+  expect("default");
+  expect(":");
+
+  Node *node = new_node(ND_DEFAULT, NULL);
+  node->rhs = stmt();
+  node->label = case_label++;
+
+  return node;
+}
 
 // "{" (stmt | decla)* "}"
 Node *compound_stmt() {
@@ -686,7 +718,7 @@ Node *compound_stmt() {
 }
 
 // "continue" ";"
-Node *cont() {
+Node *cont_stmt() {
   expect("continue");
   Node *node = new_node(ND_CONTINUE, NULL);
   expect(";");
@@ -694,7 +726,7 @@ Node *cont() {
 }
 
 // "break" ";"
-Node *breakn() {
+Node *break_stmt() {
   expect("break");
   Node *node = new_node(ND_BREAK, NULL);
   expect(";");
@@ -702,7 +734,7 @@ Node *breakn() {
 }
 
 // "return" expr? ";"
-Node *ret() {
+Node *ret_stmt() {
   expect("return");
 
   Node *node = new_node(ND_RETURN, NULL);
@@ -715,7 +747,7 @@ Node *ret() {
 }
 
 // "if" "(" expr ")" stmt ("else" stmt)?
-Node *ifn() {
+Node *if_stmt() {
   expect("if");
 
   Node *node = new_node(ND_IF, NULL);
@@ -727,11 +759,25 @@ Node *ifn() {
   if (consume("else")) {
     node->els = stmt();
   }
+
+  return node;
+}
+
+// "switch" "(" expr ")" stmt
+Node *switch_stmt() {
+  expect("switch");
+
+  Node *node = new_node(ND_SWITCH, NULL);
+  expect("(");
+  node->cond = expr();
+  expect(")");
+  node->then = stmt();
+
   return node;
 }
 
 // "while" "(" expr ")" stmt
-Node *whilen() {
+Node *while_stmt() {
   expect("while");
 
   Node *node = new_node(ND_WHILE, NULL);
@@ -743,7 +789,7 @@ Node *whilen() {
 }
 
 // "for" "(" (decla? | expr? ";") expr? ";" expr? ")" stmt
-Node *forn() {
+Node *for_stmt() {
   expect("for");
 
   Node *node = new_node(ND_FOR, NULL);
@@ -771,25 +817,41 @@ Node *forn() {
   return node;
 }
 
-// cont | breakn | ret | ifn | whilen | forn | compound_stmt | expr ";"
+// case_stmt  | default_stmt | compound_stmt | if_stmt | switch_stmt |
+// while_stmt | for_stmt | cont_stmt | break_stmt | ret_stmt | expr ";"
 Node *stmt() {
-  if (is_next("continue")) {
-    return cont();
-  } else if (is_next("break")) {
-    return breakn();
-  } else if (is_next("return")) {
-    return ret();
-  } else if (is_next("if")) {
-    return ifn();
-  } else if (is_next("while")) {
-    return whilen();
-  } else if (is_next("for")) {
-    return forn();
-  } else if (is_next("{")) {
+  if (is_next("case")) {
+    return case_stmt();
+  }
+  if (is_next("default")) {
+    return default_stmt();
+  }
+  if (is_next("{")) {
     begin_scope();
     Node *stmts = compound_stmt();
     end_scope();
     return stmts;
+  }
+  if (is_next("if")) {
+    return if_stmt();
+  }
+  if (is_next("switch")) {
+    return switch_stmt();
+  }
+  if (is_next("while")) {
+    return while_stmt();
+  }
+  if (is_next("for")) {
+    return for_stmt();
+  }
+  if (is_next("continue")) {
+    return cont_stmt();
+  }
+  if (is_next("break")) {
+    return break_stmt();
+  }
+  if (is_next("return")) {
+    return ret_stmt();
   }
 
   Node *node = expr();
