@@ -662,6 +662,41 @@ int switch1(int i) {
   }
 }
 
+int switch2(int i) {
+  switch (i) {
+  case 0:
+    return 10;
+  case 1:
+  case 2:
+    return 20;
+  case 3:
+    i = 30;
+    return i;
+  default:
+    return 40;
+  }
+}
+
+int switch3(int i) {
+  int r;
+  switch (i) {
+  case 0:
+    r = 10;
+    break;
+  case 1:
+  case 2:
+    r = 20;
+    break;
+  case 3:
+    i = 30;
+    r = i;
+    break;
+  default:
+    r = 40;
+  }
+  return r;
+}
+
 void switchs() {
   printf("test: switchs\n");
 
@@ -670,6 +705,18 @@ void switchs() {
   assert(switch1(97), 30);
   assert(switch1(3), 40);
   assert(switch1(4), 40);
+
+  assert(switch2(0), 10);
+  assert(switch2(1), 20);
+  assert(switch2(2), 20);
+  assert(switch2(3), 30);
+  assert(switch2(4), 40);
+
+  assert(switch3(0), 10);
+  assert(switch3(1), 20);
+  assert(switch3(2), 20);
+  assert(switch3(3), 30);
+  assert(switch3(4), 40);
 }
 
 int main() {

@@ -661,7 +661,7 @@ void begin_scope() {
 
 void end_scope() { scope = scope->parent; }
 
-// "case" expr ":" statement
+// "case" expr ":" statement?
 Node *case_stmt() {
   expect("case");
 
@@ -673,8 +673,11 @@ Node *case_stmt() {
   }
   node->val = cond->val;
   expect(":");
-  node->rhs = stmt();
   node->label = case_label++;
+  if (is_next("case")) {
+    return node;
+  }
+  node->rhs = stmt();
 
   return node;
 }

@@ -212,6 +212,8 @@ void gen_if(Node *node) {
 }
 
 void gen_switch(Node *node) {
+  int end_label = label_loop_idx++;
+
   gen(node->cond);
   printf("  pop rax\n");
 
@@ -234,11 +236,15 @@ void gen_switch(Node *node) {
   }
 
   gen(node->then);
+
+  printf(".Lend%d:\n", end_label);
 }
 
 void gen_case(Node *node) {
   printf(".Lcase%d:\n", node->label);
-  gen(node->rhs);
+  if (node->rhs) {
+    gen(node->rhs);
+  }
 }
 
 void gen_while(Node *node) {
