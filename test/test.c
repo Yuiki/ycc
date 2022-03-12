@@ -783,6 +783,16 @@ void bools() {
   assert(sizeof(i), 1);
 }
 
+int decla_test(int i);
+
+void func_decla() {
+  printf("test: func_decla\n");
+
+  assert(decla_test(100), 100);
+}
+
+int decla_test(int i) { return i; }
+
 int main() {
   arith();
   cmp();
@@ -811,5 +821,6 @@ int main() {
   switchs();
   structs();
   bools();
+  func_decla();
   return 0;
 }

@@ -988,7 +988,7 @@ Node *stmt() {
   return node;
 }
 
-// "(" (")" | type ("," expr)* ")") compound_stmt
+// "(" (")" | type ("," expr)* ")") (compound_stmt | ";")
 Node *func(Token *name) {
   begin_scope();
 
@@ -1020,7 +1020,12 @@ Node *func(Token *name) {
     }
   }
 
-  node->block = compound_stmt();
+  if (is_next("{")) { // define
+    node->block = compound_stmt();
+  } else { // decla
+    expect(";");
+    return new_node(ND_NOP, NULL);
+  }
 
   node->lvars_size = lvars_size + ((16 - (lvars_size % 16)) % 16);
   lvars_size = 0;
