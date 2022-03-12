@@ -805,6 +805,13 @@ void externs() {
   assert(extern_test(100), 100);
 }
 
+typedef int u32;
+
+void typedefs() {
+  u32 foo = 1;
+  assert(foo, 1);
+}
+
 int main() {
   arith();
   cmp();

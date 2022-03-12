@@ -44,6 +44,21 @@ Ident *new_ident(Type *type, char *name, int name_len, IdentKind kind) {
   return ident;
 }
 
+Type *find_type(Token *name, bool current) {
+  for (Scope *sc = scope; sc; sc = sc->parent) {
+    for (Type *type = sc->type; type; type = type->next) {
+      if (type && type->name_len == name->len &&
+          !memcmp(name->str, type->name, type->name_len)) {
+        return type;
+      }
+    }
+    if (current) {
+      break;
+    }
+  }
+  return NULL;
+}
+
 bool is_op(Token *token, char *op) {
   if (token->kind != TK_RESERVED || strlen(op) != token->len ||
       memcmp(token->str, op, token->len)) {
@@ -58,7 +73,8 @@ bool is_next(char *op) { return is_op(token, op); }
 
 bool is_decla(Token *tok) {
   return is_op(tok, "char") || is_op(tok, "int") || is_op(tok, "void") ||
-         is_op(tok, "_Bool") || is_op(tok, "enum") || is_op(tok, "struct");
+         is_op(tok, "_Bool") || is_op(tok, "enum") || is_op(tok, "struct") ||
+         find_type(tok, false);
 }
 
 bool is_next_decla() { return is_decla(token); }
@@ -128,19 +144,13 @@ void enum_specifier() {
   expect("}");
 }
 
-Type *find_type(Token *name, bool current) {
-  for (Scope *sc = scope; sc; sc = sc->parent) {
-    for (Type *type = sc->type; type; type = type->next) {
-      if (type && type->name_len == name->len &&
-          !memcmp(name->str, type->name, type->name_len)) {
-        return type;
-      }
-    }
-    if (current) {
-      break;
-    }
-  }
-  return NULL;
+Type *register_type(Type *type, char *name, int name_len) {
+  type->name = name;
+  type->name_len = name_len;
+
+  type->next = scope->type;
+  scope->type = type;
+  return type;
 }
 
 Type *create_struct(Token *name) {
@@ -149,10 +159,8 @@ Type *create_struct(Token *name) {
     error_at(token->str, "the variable is already declared");
   }
 
-  ty = new_type(STRUCT);
+  ty = register_type(new_type(STRUCT), name->str, name->len);
   ty->needs_specifier = true;
-  ty->name = name->str;
-  ty->name_len = name->len;
   StructMember **member_head = &ty->member;
   int currSize = 0;
 
@@ -172,9 +180,6 @@ Type *create_struct(Token *name) {
 
     consume(";");
   }
-
-  ty->next = scope->type;
-  scope->type = ty;
 
   return ty;
 }
@@ -199,7 +204,7 @@ Type *struct_specifier() {
   return ty;
 }
 
-Type *consume_type(Token *token) {
+Type *consume_type(Token *tok) {
   if (consume("char")) {
     return new_type(CHAR);
   }
@@ -218,6 +223,11 @@ Type *consume_type(Token *token) {
   }
   if (is_next("struct")) {
     return struct_specifier();
+  }
+  Type *defined = find_type(tok, false);
+  if (defined) {
+    token = token->next;
+    return defined;
   }
   return NULL;
 }
@@ -1052,7 +1062,7 @@ Node *global_var(Token *name, Type *type) {
   return node;
 }
 
-// (type_ident ("(" func | gloval_var))*
+// ("extern"? type_ident ("(" func | gloval_var))*
 void program() {
   begin_scope();
   Ident **head = &scope->ident;
@@ -1061,7 +1071,19 @@ void program() {
   for (int i = 0; !at_eof();) {
     bool has_extern = consume("extern");
 
+    bool is_typedef = false;
+    if (consume("typedef")) {
+      is_typedef = true;
+    }
+
     Type *type = type_ident(&ident);
+
+    if (is_typedef) {
+      register_type(type, ident->str, ident->len);
+      expect(";");
+      continue;
+    }
+
     if (ident == NULL) {
       expect(";");
       continue;
