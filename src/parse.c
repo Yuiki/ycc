@@ -1059,6 +1059,8 @@ void program() {
 
   Token *ident;
   for (int i = 0; !at_eof();) {
+    bool has_extern = consume("extern");
+
     Type *type = type_ident(&ident);
     if (ident == NULL) {
       expect(";");
@@ -1070,11 +1072,16 @@ void program() {
       globals[i] = t;
     } else { // global var
       Node *node = global_var(ident, type);
-      globals[i] = node;
 
       Ident *ident = new_ident(node->type, node->name, node->name_len, GVAR);
       *head = ident;
       head = &ident->next;
+
+      if (has_extern) {
+        continue;
+      } else {
+        globals[i] = node;
+      }
     }
     i++;
   }

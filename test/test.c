@@ -793,6 +793,18 @@ void func_decla() {
 
 int decla_test(int i) { return i; }
 
+extern int extern_test(int i);
+
+int extern_test(int i) { return i; }
+
+extern int extern_test2;
+
+void externs() {
+  printf("test: externs\n");
+
+  assert(extern_test(100), 100);
+}
+
 int main() {
   arith();
   cmp();
@@ -822,5 +834,6 @@ int main() {
   structs();
   bools();
   func_decla();
+  externs();
   return 0;
 }

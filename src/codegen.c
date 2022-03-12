@@ -61,7 +61,7 @@ void gen_str(Node *node) {
 void gen_gvar_decra(Node *node) {
   int size = size_of(node->type);
   // TODO: set alignment properly
-  printf("  .comm %.*s,%d,16\n", node->name_len, node->name, size);
+  printf(".comm %.*s,%d,16\n", node->name_len, node->name, size);
 }
 
 void gen_var(Node *node) {
