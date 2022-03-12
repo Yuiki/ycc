@@ -11,6 +11,8 @@ int size_of(Type *type) {
     return 0;
   case PTR:
     return 8;
+  case ENUM:
+    return 4;
   case ARRAY:
     return type->array_size * size_of(type->ptr_to);
   case STRUCT: {
