@@ -773,6 +773,16 @@ void structs() {
   struct3();
 }
 
+void bools() {
+  printf("test: bools\n");
+
+  _Bool i = 1;
+  assert(i, 1);
+  i = !i;
+  assert(i, 0);
+  assert(sizeof(i), 1);
+}
+
 int main() {
   arith();
   cmp();
@@ -800,5 +810,6 @@ int main() {
   enumeration();
   switchs();
   structs();
+  bools();
   return 0;
 }
