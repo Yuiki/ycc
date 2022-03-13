@@ -125,7 +125,7 @@ int expect_number() {
 void enum_specifier() {
   expect("enum");
   expect("{");
-  for (int i = 0;; i++) {
+  for (int i = 0; !is_next("}"); i++) {
     Token *tok = consume_ident();
     if (tok == NULL) {
       error_at(token->str, "not identifier");
@@ -140,7 +140,6 @@ void enum_specifier() {
       break;
     }
   }
-  consume(",");
   expect("}");
 }
 
