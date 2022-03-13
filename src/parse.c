@@ -620,10 +620,11 @@ Node *member(StructMember *root_member, Node *root_node) {
 
   StructMember *found = find_member(root_member, ident);
   if (found == NULL) {
-    error_at(token->str, "the member is not defined");
+    error_at(ident->str, "the member is not defined");
   }
 
   Node *add = new_node_child(ND_ADD, root_node, new_node_num(found->offset));
+  add->type = found->type;
   Node *deref = new_node(ND_DEREF, add->type);
   deref->lhs = add;
   return deref;

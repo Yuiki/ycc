@@ -806,12 +806,29 @@ void struct3() {
   assert(a.bar, 20);
 }
 
+struct Child {
+  int value;
+};
+
+struct Parent {
+  struct Child *child;
+};
+
+void struct4() {
+  struct Parent p;
+  struct Child *c = calloc(1, sizeof(struct Child));
+  p.child = c;
+  c->value = 100;
+  assert(p.child->value, 100);
+}
+
 void structs() {
   printf("test: structs\n");
 
   struct1();
   struct2();
   struct3();
+  struct4();
 }
 
 void bools() {
