@@ -828,6 +828,9 @@ typedef int a;
 typedef a b;
 typedef int c;
 
+typedef struct {
+} _t;
+
 void typedefs() {
   printf("test: typedefs\n");
 

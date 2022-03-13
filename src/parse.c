@@ -162,7 +162,10 @@ Type *register_type(Type *type, Token *name) {
 }
 
 Type *create_struct(Token *name, bool is_definition) {
-  Type *ty = register_type(new_type(STRUCT), name);
+  Type *ty = new_type(STRUCT);
+  if (name) {
+    ty = register_type(ty, name);
+  }
   if (!ty) {
     ty->needs_specifier = true;
   }
@@ -194,23 +197,22 @@ Type *create_struct(Token *name, bool is_definition) {
   return ty;
 }
 
-// "struct" ident ("{" (type_ident ";")* "}")?
+// "struct" ident? ("{" (type_ident ";")* "}")?
 Type *struct_specifier() {
   expect("struct");
 
   Token *name = consume_ident();
-  if (name == NULL) {
-    error_at(name->str, "not identifier");
-  }
 
   bool is_definition = consume("{");
 
-  Type *declared = find_type(name, false);
-  if (declared && declared->is_defined) {
-    if (is_definition) {
-      error_at(name->str, "already defined");
+  if (name) {
+    Type *declared = find_type(name, false);
+    if (declared && declared->is_defined) {
+      if (is_definition) {
+        error_at(name->str, "already defined");
+      }
+      return declared;
     }
-    return declared;
   }
 
   Type *ty = create_struct(name, is_definition);
