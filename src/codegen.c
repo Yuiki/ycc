@@ -13,6 +13,8 @@ void store(TypeKind type) {
 
   if (type == CHAR) {
     printf("  mov [rax], dil\n");
+  } else if (type == SHORT) {
+    printf("  mov [rax], di\n");
   } else if (type == INT) {
     printf("  mov [rax], edi\n");
   } else {
@@ -26,6 +28,8 @@ void load(TypeKind type) {
 
   if (type == CHAR) {
     printf("  movsx rax, BYTE PTR [rax]\n");
+  } else if (type == SHORT) {
+    printf("  movsx rax, SHORT PTR [rax]\n");
   } else if (type == INT) {
     printf("  mov eax, [rax]\n");
   } else {

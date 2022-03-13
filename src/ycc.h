@@ -36,7 +36,7 @@ typedef enum {
   ND_NOP,        // no-op
 } NodeKind;
 
-typedef enum { CHAR, INT, VOID, PTR, ARRAY, ENUM, STRUCT } TypeKind;
+typedef enum { CHAR, SHORT, INT, VOID, PTR, ARRAY, ENUM, STRUCT } TypeKind;
 
 typedef struct Type Type;
 

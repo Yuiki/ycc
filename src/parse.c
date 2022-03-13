@@ -72,9 +72,9 @@ bool is_op(Token *token, char *op) {
 bool is_next(char *op) { return is_op(token, op); }
 
 bool is_decla(Token *tok) {
-  return is_op(tok, "char") || is_op(tok, "int") || is_op(tok, "void") ||
-         is_op(tok, "_Bool") || is_op(tok, "enum") || is_op(tok, "struct") ||
-         find_type(tok, false);
+  return is_op(tok, "char") || is_op(tok, "int") || is_op(tok, "short") ||
+         is_op(tok, "void") || is_op(tok, "_Bool") || is_op(tok, "enum") ||
+         is_op(tok, "struct") || find_type(tok, false);
 }
 
 bool is_next_decla() { return is_decla(token); }
@@ -222,6 +222,10 @@ Type *struct_specifier() {
 Type *consume_type(Token *tok) {
   if (consume("char")) {
     return new_type(CHAR);
+  }
+  if (consume("short")) {
+    consume("int");
+    return new_type(SHORT);
   }
   if (consume("int")) {
     return new_type(INT);

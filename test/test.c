@@ -419,6 +419,13 @@ void sizeof10() {
   assert(sizeof(struct Foo), 4);
 }
 
+typedef short int __int16_t;
+
+void sizeof11() {
+  assert(sizeof(__int16_t), 2);
+  assert(sizeof(short), 2);
+}
+
 void sizeofs() {
   printf("test: sizeofs\n");
 
@@ -432,6 +439,7 @@ void sizeofs() {
   sizeof8();
   sizeof9();
   sizeof10();
+  sizeof11();
 }
 
 void arr1() { int a[10]; }

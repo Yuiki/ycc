@@ -100,9 +100,9 @@ bool tokenize_reserved(char **pp, Token **pcur) {
 
 bool tokenize_keywords(char **p, Token **cur) {
   char *kws[] = {
-      "return", "if",      "else",   "while",  "for",      "int",  "char",
-      "void",   "_Bool",   "sizeof", "break",  "continue", "enum", "switch",
-      "case",   "default", "struct", "extern", "typedef",
+      "return", "if",   "else",    "while",  "for",    "int",      "char",
+      "short",  "void", "_Bool",   "sizeof", "break",  "continue", "enum",
+      "switch", "case", "default", "struct", "extern", "typedef",
   };
   int len = sizeof(kws) / sizeof(char *);
   for (int i = 0; i < len; i++) {
