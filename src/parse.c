@@ -161,6 +161,28 @@ Type *register_type(Type *type, Token *name) {
   return new_ty;
 }
 
+// "[" num? "]""
+Type *consume_array_decla(Type *base_ty, int *len) {
+  if (!consume("[")) {
+    return NULL;
+  }
+  Type *new_ty = new_type(ARRAY);
+
+  if (token->kind == TK_NUM) {
+    *len = token->val;
+    token = token->next;
+
+    new_ty->array_size = *len;
+  } else {
+    *len = -1;
+  }
+
+  expect("]");
+
+  new_ty->ptr_to = base_ty;
+  return new_ty;
+}
+
 Type *create_struct(Token *name, bool is_definition) {
   Type *ty = new_type(STRUCT);
   if (name) {
@@ -180,6 +202,12 @@ Type *create_struct(Token *name, bool is_definition) {
   while (is_next_decla()) {
     Token *member_name;
     Type *member_ty = type_ident(&member_name);
+
+    Type *arr_type;
+    int arr_len;
+    if ((arr_type = consume_array_decla(member_ty, &arr_len))) {
+      member_ty = arr_type;
+    }
 
     StructMember *member = calloc(1, sizeof(StructMember));
     member->type = member_ty;
@@ -364,28 +392,6 @@ Type *type_ident(Token **ident) {
 
   *ident = consume_ident();
   return type;
-}
-
-// "[" num? "]""
-Type *consume_array_decla(Type *base_ty, int *len) {
-  if (!consume("[")) {
-    return NULL;
-  }
-  Type *new_ty = new_type(ARRAY);
-
-  if (token->kind == TK_NUM) {
-    *len = token->val;
-    token = token->next;
-
-    new_ty->array_size = *len;
-  } else {
-    *len = -1;
-  }
-
-  expect("]");
-
-  new_ty->ptr_to = base_ty;
-  return new_ty;
 }
 
 Node *create_arr_elem(Node *arr, Node *offset) {

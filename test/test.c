@@ -750,6 +750,10 @@ struct TestStruct2 {
   struct TestStruct *test;
 };
 
+struct TestStruct3 {
+  int a[1];
+};
+
 void struct1() {
   struct TestStruct *a = calloc(1, sizeof(struct TestStruct));
   int b = 100;

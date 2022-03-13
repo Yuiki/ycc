@@ -1,8 +1,8 @@
 #include "ycc.h"
 #include <stdio.h>
 
-int label_loop_idx = 0;
-int label_cond_idx = 0;
+int label_loop_idx;
+int label_cond_idx;
 
 void gen();
 
