@@ -301,8 +301,6 @@ void call4() {
   assert(echo2(100), 100);
 }
 
-int fib(int n);
-
 int fib(int n) {
   if (n == 0)
     return 0;

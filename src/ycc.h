@@ -62,7 +62,7 @@ struct StructMember {
   StructMember *next;
 };
 
-typedef enum { GVAR, LVAR, ENUM_CONST } IdentKind;
+typedef enum { GVAR, LVAR, ENUM_CONST, FUNC } IdentKind;
 
 typedef struct Ident Ident;
 
@@ -72,7 +72,7 @@ struct Ident {
   int len; // len of name
   IdentKind kind;
   int offset; // offset from RBP if kind = VAR
-  Type *type; // if kind = VAR
+  Type *type; // if kind = VAR, FUNC
   int value;  // if kind = ENUM_CONST
 };
 
