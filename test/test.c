@@ -1,3 +1,8 @@
+extern int printf(char *fmt, ...);
+
+extern void *calloc(int len, int size);
+extern void exit(int status);
+
 int foo() { return 0; }
 
 int echo(int x) { return x; }
@@ -10,7 +15,7 @@ void print(char c) { printf("%c\n", c); }
 
 int **alloc4(int **p, int a, int b, int c, int d) {
   int *t;
-  t = malloc(4 * sizeof(0));
+  t = calloc(1, 4 * sizeof(0));
   t[0] = a;
   t[1] = b;
   t[2] = c;
@@ -296,6 +301,8 @@ void call4() {
   assert(echo2(100), 100);
 }
 
+int fib(int n);
+
 int fib(int n) {
   if (n == 0)
     return 0;
@@ -307,6 +314,18 @@ int fib(int n) {
 
 void call5() { assert(fib(11), 89); }
 
+typedef struct {
+  int foo;
+} CallTest;
+
+CallTest *call_test() {
+  CallTest *ct = calloc(1, sizeof(CallTest));
+  ct->foo = 100;
+  return ct;
+}
+
+void call6() { assert(call_test()->foo, 100); }
+
 void calls() {
   printf("test: calls\n");
 
@@ -315,6 +334,7 @@ void calls() {
   call3();
   call4();
   call5();
+  call6();
 }
 
 void ref1() {
@@ -353,7 +373,7 @@ void refs() {
   ref3();
 }
 
-int ptr1() {
+void ptr1() {
   int *p;
   alloc4(&p, 1, 2, 4, 8);
   int *q;

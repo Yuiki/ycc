@@ -484,10 +484,31 @@ Node *decla() {
   }
 }
 
+Type *type_of_func(Token *name) {
+  int len = sizeof(globals) / sizeof(Node *);
+  for (int i = 0; i < len; i++) {
+    Node *func = globals[i];
+    if (func == NULL) {
+      break;
+    }
+
+    if (func->func_len == name->len &&
+        !memcmp(func->func, name->str, func->func_len)) {
+      return func->type;
+    }
+  }
+  return NULL;
+}
+
 // ")" | expr ("," expr)* ")"
 Node *func_call(Token *name) {
   // TODO: set proper type
-  Node *node = new_node(ND_CALL, new_type(INT));
+  Type *type = type_of_func(name);
+  if (type == NULL) {
+    error_at(name->str, "the function is not declared");
+  }
+
+  Node *node = new_node(ND_CALL, type);
   node->func = name->str;
   node->func_len = name->len;
 
@@ -664,6 +685,8 @@ Node *postfix() {
   }
 }
 
+Node *unary();
+
 // ("&" | "*" | "+" | "-" | "!") unary | "sizeof" (unary | "(" type-name ")")
 // postfix
 Node *unary() {
@@ -774,6 +797,8 @@ Node *equality() {
   }
 }
 
+Node *logical_and();
+
 // equality ("&&" logical_and)*
 Node *logical_and() {
   Node *node = equality();
@@ -786,6 +811,8 @@ Node *logical_and() {
   }
 }
 
+Node *logical_or();
+
 // logical_and ("||" logical_or)*
 Node *logical_or() {
   Node *node = logical_and();
@@ -797,6 +824,8 @@ Node *logical_or() {
     }
   }
 }
+
+Node *assign();
 
 // logical_or (("=" | "+=") assign)?
 Node *assign() {
@@ -1072,7 +1101,8 @@ Node *func(Token *name) {
     node->block = compound_stmt();
   } else { // decla
     expect(";");
-    return new_node(ND_NOP, NULL);
+    node->kind = ND_NOP;
+    return node;
   }
 
   node->lvars_size = lvars_size + ((16 - (lvars_size % 16)) % 16);
@@ -1127,6 +1157,7 @@ void program() {
 
     if (is_next("(")) { // function
       Node *t = func(ident);
+      t->type = type;
       globals[i] = t;
     } else { // global var
       Node *node = global_var(ident, type);

@@ -5,4 +5,6 @@
 typedef struct {
 } va_list;
 
+extern void va_start();
+
 #endif
