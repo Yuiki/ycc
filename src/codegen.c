@@ -40,6 +40,11 @@ void load(TypeKind type) {
 }
 
 void gen_val(Node *node) {
+  if (node->kind == ND_DEREF) {
+    gen(node->lhs);
+    return;
+  }
+
   if (node->kind != ND_LVAR && node->kind != ND_GVAR) {
     error("node is not variable [NodeKind: %d]", node->kind);
   }
@@ -70,7 +75,7 @@ void gen_gvar_decra(Node *node) {
 
 void gen_var(Node *node) {
   gen_val(node);
-  if (node->type->kind != ARRAY) {
+  if (node->type->kind != ARRAY && node->type->kind != STRUCT) {
     load(node->type->kind);
   }
 }

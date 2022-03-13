@@ -365,12 +365,25 @@ void ref3() {
   assert(*y, 1);
 }
 
+typedef struct {
+  int *foo;
+} RefTest;
+
+void ref4() {
+  RefTest rt;
+  int i = 100;
+  rt.foo = &i;
+  int **j = &rt.foo;
+  assert(**j, 100);
+}
+
 void refs() {
   printf("test: refs\n");
 
   ref1();
   ref2();
   ref3();
+  ref4();
 }
 
 void ptr1() {
