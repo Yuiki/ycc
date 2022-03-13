@@ -662,6 +662,16 @@ void scopes() {
 }
 
 enum { BAZ };
+
+typedef enum { CHAR, SHORT, INT } TypeKind;
+
+void enum1(TypeKind type) {
+  type = 2;
+  if (type == CHAR) {
+    assert(type, INT);
+  }
+}
+
 void enumeration() {
   printf("test: enumeration\n");
 
@@ -669,6 +679,8 @@ void enumeration() {
   assert(FOO, 0);
   assert(BAR, 1);
   assert(BAZ, 0);
+
+  enum1(CHAR);
 }
 
 int switch1(int i) {

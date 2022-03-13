@@ -15,7 +15,7 @@ void store(TypeKind type) {
     printf("  mov [rax], dil\n");
   } else if (type == SHORT) {
     printf("  mov [rax], di\n");
-  } else if (type == INT) {
+  } else if (type == INT || type == ENUM) {
     printf("  mov [rax], edi\n");
   } else {
     printf("  mov [rax], rdi\n");
@@ -30,7 +30,7 @@ void load(TypeKind type) {
     printf("  movsx rax, BYTE PTR [rax]\n");
   } else if (type == SHORT) {
     printf("  movsx rax, SHORT PTR [rax]\n");
-  } else if (type == INT) {
+  } else if (type == INT || type == ENUM) {
     printf("  mov eax, [rax]\n");
   } else {
     printf("  mov rax, [rax]\n");
