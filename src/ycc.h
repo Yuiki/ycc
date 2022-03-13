@@ -51,6 +51,7 @@ struct Type {
   bool needs_specifier; // if ty = STRUCT
   StructMember *member; // if ty = STRUCT
   Type *next;           // if parent is Scope
+  bool is_defined;      // if ty = STRUCT
 };
 
 struct StructMember {

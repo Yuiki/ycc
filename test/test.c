@@ -807,9 +807,27 @@ void externs() {
 
 typedef int u32;
 
+typedef enum { FOO } TypedefEnum;
+
+typedef struct TypedefStruct TypedefStruct;
+
+struct TypedefStruct {
+  int foo;
+  char bar;
+};
+
 void typedefs() {
+  printf("test: typedefs\n");
+
   u32 foo = 1;
   assert(foo, 1);
+
+  TypedefEnum bar = FOO;
+  assert(FOO, 0);
+
+  TypedefStruct baz;
+  baz.bar = 10;
+  assert(baz.bar, 10);
 }
 
 int main() {
@@ -842,5 +860,6 @@ int main() {
   bools();
   func_decla();
   externs();
+  typedefs();
   return 0;
 }

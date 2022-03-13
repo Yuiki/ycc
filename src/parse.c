@@ -144,23 +144,31 @@ void enum_specifier() {
   expect("}");
 }
 
-Type *register_type(Type *type, char *name, int name_len) {
-  type->name = name;
-  type->name_len = name_len;
+Type *register_type(Type *type, Token *name) {
+  Type *declared = find_type(name, false);
+  if (declared) {
+    declared->needs_specifier = false;
+    return declared;
+  }
+
+  type->name = name->str;
+  type->name_len = name->len;
 
   type->next = scope->type;
   scope->type = type;
   return type;
 }
 
-Type *create_struct(Token *name) {
-  Type *ty = find_type(name, true);
-  if (ty) {
-    error_at(token->str, "the variable is already declared");
+Type *create_struct(Token *name, bool is_definition) {
+  Type *ty = register_type(new_type(STRUCT), name);
+  if (!ty) {
+    ty->needs_specifier = true;
+  }
+  ty->is_defined = is_definition;
+  if (!is_definition) {
+    return ty;
   }
 
-  ty = register_type(new_type(STRUCT), name->str, name->len);
-  ty->needs_specifier = true;
   StructMember **member_head = &ty->member;
   int currSize = 0;
 
@@ -193,13 +201,21 @@ Type *struct_specifier() {
     error_at(name->str, "not identifier");
   }
 
-  if (!consume("{")) {
-    return find_type(name, false);
+  bool is_definition = consume("{");
+
+  Type *declared = find_type(name, false);
+  if (declared && declared->is_defined) {
+    if (is_definition) {
+      error_at(name->str, "already defined");
+    }
+    return declared;
   }
 
-  Type *ty = create_struct(name);
+  Type *ty = create_struct(name, is_definition);
 
-  expect("}");
+  if (is_definition) {
+    expect("}");
+  }
 
   return ty;
 }
@@ -225,7 +241,7 @@ Type *consume_type(Token *tok) {
     return struct_specifier();
   }
   Type *defined = find_type(tok, false);
-  if (defined) {
+  if (defined && !defined->needs_specifier) {
     token = token->next;
     return defined;
   }
@@ -1079,7 +1095,7 @@ void program() {
     Type *type = type_ident(&ident);
 
     if (is_typedef) {
-      register_type(type, ident->str, ident->len);
+      register_type(type, ident);
       expect(";");
       continue;
     }
