@@ -6,6 +6,11 @@
 #define signed
 #define unsigned
 #define long
+#define double int
+#define float int
+#define static
+#define __inline
+#define volatile
 
 #ifndef _YCC_STDDEF
 #define _YCC_STDDEF 1
@@ -17,7 +22,11 @@
 
 #define __restrict
 
+#define __extension__
+
 // TODO: use unsigned long
 typedef int size_t;
+
+typedef char wchar_t;
 
 #endif

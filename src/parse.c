@@ -10,7 +10,7 @@ int lvars_size;
 
 Str *strs;
 
-Node *globals[200];
+Node *globals[1000];
 
 Node *expr();
 
