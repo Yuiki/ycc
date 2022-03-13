@@ -957,7 +957,7 @@ Node *while_stmt() {
   return node;
 }
 
-// "for" "(" (decla? | expr? ";") expr? ";" expr? ")" stmt
+// "for" "(" (decla? | expr? ";") expr? ";" expr? ("," expr)* ")" stmt
 Node *for_stmt() {
   expect("for");
 
@@ -976,9 +976,16 @@ Node *for_stmt() {
     expect(";");
   }
 
-  if (!consume(")")) {
-    node->step = expr();
-    expect(")");
+  node->step = new_node(ND_BLOCK, NULL);
+  Node **step_head = &node->step->body;
+  while (!consume(")")) {
+    *step_head = expr();
+    step_head = &(*step_head)->next;
+
+    if (!consume(",")) {
+      consume(")");
+      break;
+    }
   }
 
   node->then = stmt();

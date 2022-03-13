@@ -248,6 +248,13 @@ void for6() {
   assert(r, 55);
 }
 
+void for7() {
+  int a = 0;
+  for (int i = 0; i < 10; i++, a++) {
+  }
+  assert(a, 10);
+}
+
 void fors() {
   printf("test: fors\n");
 
@@ -257,6 +264,7 @@ void fors() {
   for4();
   for5();
   for6();
+  for7();
 }
 
 void call1() { foo(); }
