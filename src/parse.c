@@ -521,11 +521,6 @@ Node *array(Node *base) {
 Node *lvar(Type *type, int offset) {
   Node *node = new_node(ND_LVAR, type);
   node->offset = offset;
-
-  Node *arr;
-  if ((arr = array(node))) {
-    return arr;
-  }
   return node;
 }
 
@@ -533,11 +528,6 @@ Node *gvar(Token *name, Type *type) {
   Node *node = new_node(ND_GVAR, type);
   node->name = name->str;
   node->name_len = name->len;
-
-  Node *arr;
-  if ((arr = array(node))) {
-    return arr;
-  }
   return node;
 }
 
@@ -663,6 +653,10 @@ Node *postfix() {
     }
     if (consume(".")) {
       node = member(node->type->member, node);
+      continue;
+    }
+    if (is_next("[")) {
+      node = array(node);
       continue;
     }
     return node;
