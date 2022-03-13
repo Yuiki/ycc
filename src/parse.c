@@ -1025,6 +1025,12 @@ Node *func(Token *name) {
 
   Node *head = NULL;
   while (!consume(")")) {
+    // TODO: support properly
+    if (consume("...")) {
+      expect(")");
+      break;
+    }
+
     Token *param;
     Type *type = type_ident(&param);
 

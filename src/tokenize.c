@@ -78,6 +78,13 @@ bool tokenize_reserved(char **pp, Token **pcur) {
     return true;
   }
 
+  if (!strncmp(p, "...", 3)) {
+    *pcur = new_token(TK_RESERVED, *(pcur), p);
+    (*pcur)->len = 3;
+    *pp += 3;
+    return true;
+  }
+
   if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '%' ||
       *p == '(' || *p == ')' || *p == '<' || *p == '>' || *p == ';' ||
       *p == '=' || *p == '{' || *p == '}' || *p == ',' || *p == '*' ||
