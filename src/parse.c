@@ -402,7 +402,7 @@ Node *create_arr_elem(Node *arr, Node *offset) {
 }
 
 // type-ident (array-decla)?
-// ("=" (equality | ("{" equality? ("," equality)* "}")))? ";"
+// ("=" (equality | ("{" equality? ("," equality)* ","? "}")))? ";"
 Node *decla() {
   Token *ident;
   Type *type = type_ident(&ident);
@@ -438,10 +438,9 @@ Node *decla() {
           head = head->next;
         }
 
-        if (consume(",")) {
-          continue;
-        } else {
-          expect("}");
+        consume(",");
+
+        if (consume("}")) {
           break;
         }
       }
