@@ -824,6 +824,10 @@ struct TypedefStruct {
   char bar;
 };
 
+typedef int a;
+typedef a b;
+typedef int c;
+
 void typedefs() {
   printf("test: typedefs\n");
 

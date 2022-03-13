@@ -150,12 +150,15 @@ Type *register_type(Type *type, Token *name) {
     return declared;
   }
 
-  type->name = name->str;
-  type->name_len = name->len;
+  Type *new_ty = calloc(1, sizeof(Type));
+  memcpy(new_ty, type, sizeof(*new_ty));
 
-  type->next = scope->type;
-  scope->type = type;
-  return type;
+  new_ty->name = name->str;
+  new_ty->name_len = name->len;
+
+  new_ty->next = scope->type;
+  scope->type = new_ty;
+  return new_ty;
 }
 
 Type *create_struct(Token *name, bool is_definition) {
