@@ -448,6 +448,7 @@ Node *decla() {
       if (arr_len == -1) {
         var->type->array_size = init_idx + 1;
         var->offset += size_of(var->type);
+        arr_len = var->type->array_size;
       }
 
       // zero initialization
