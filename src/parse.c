@@ -728,17 +728,29 @@ Node *unary() {
   return postfix();
 }
 
-// unary (("*" | "/" | "%") unary)*
+// unary | "(" type-name ")" cast
+Node *cast() {
+  if (is_next("(") && is_op(token->next, "int")) {
+    // TODO: support properly
+    consume("(");
+    consume("int");
+    expect(")");
+    return cast();
+  }
+  return unary();
+}
+
+// cast (("*" | "/" | "%") cast)*
 Node *mul() {
-  Node *node = unary();
+  Node *node = cast();
 
   for (;;) {
     if (consume("*")) {
-      node = new_node_child(ND_MUL, node, unary());
+      node = new_node_child(ND_MUL, node, cast());
     } else if (consume("/")) {
-      node = new_node_child(ND_DIV, node, unary());
+      node = new_node_child(ND_DIV, node, cast());
     } else if (consume("%")) {
-      node = new_node_child(ND_MOD, node, unary());
+      node = new_node_child(ND_MOD, node, cast());
     } else {
       return node;
     }
