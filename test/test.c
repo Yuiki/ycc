@@ -255,6 +255,12 @@ void for7() {
   assert(a, 10);
 }
 
+void for8() {
+  for (;;) {
+    break;
+  }
+}
+
 void fors() {
   printf("test: fors\n");
 
@@ -265,6 +271,7 @@ void fors() {
   for5();
   for6();
   for7();
+  for8();
 }
 
 void call1() { foo(); }

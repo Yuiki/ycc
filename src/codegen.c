@@ -266,13 +266,19 @@ void gen_while(Node *node) {
 
 void gen_for(Node *node) {
   int idx = label_loop_idx++;
-  gen(node->init);
+  if (node->init) {
+    gen(node->init);
+  }
   printf(".Lbegin%d:\n", idx);
-  gen(node->cond);
+  if (node->cond) {
+    gen(node->cond);
+  }
   printf("  pop rax\n");
   printf("  cmp rax, 0\n");
   printf("  je .Lend%d\n", idx);
-  gen(node->then);
+  if (node->then) {
+    gen(node->then);
+  }
   printf(".Lcontin%d:\n", idx);
   gen(node->step);
   printf("  jmp .Lbegin%d\n", idx);
