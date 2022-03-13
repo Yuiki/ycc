@@ -1101,8 +1101,6 @@ Node *global_var(Token *name, Type *type) {
 // ("extern"? type_ident ("(" func | gloval_var))*
 void program() {
   begin_scope();
-  Ident **head = &scope->ident;
-
   Token *ident;
   for (int i = 0; !at_eof();) {
     bool has_extern = consume("extern");
@@ -1120,7 +1118,7 @@ void program() {
       continue;
     }
 
-    if (ident == NULL) {
+    if (ident == NULL) { // enum or ...
       expect(";");
       continue;
     }
@@ -1132,8 +1130,8 @@ void program() {
       Node *node = global_var(ident, type);
 
       Ident *ident = new_ident(node->type, node->name, node->name_len, GVAR);
-      *head = ident;
-      head = &ident->next;
+      ident->next = scope->ident;
+      scope->ident = ident;
 
       if (has_extern) {
         continue;

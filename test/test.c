@@ -665,6 +665,8 @@ enum { BAZ };
 
 typedef enum { CHAR, SHORT, INT } TypeKind;
 
+int _g;
+
 void enum1(TypeKind type) {
   type = 2;
   if (type == CHAR) {
