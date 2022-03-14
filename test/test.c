@@ -1,7 +1,5 @@
-extern int printf(char *fmt, ...);
-
-extern void *calloc(int len, int size);
-extern void exit(int status);
+#include <stdio.h>
+#include <stdlib.h>
 
 int foo() { return 0; }
 

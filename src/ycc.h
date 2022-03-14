@@ -191,3 +191,7 @@ char *read_file(char *path);
 int size_of(Type *type);
 
 int offset_of(int curr_size, Type *type);
+
+// preprocess.c
+
+char *preprocess(char *program);
