@@ -310,14 +310,14 @@ void gen_child(Node *node) {
 // add offset for add/sub if needed
 void gen_ptr_offset(Node *node) {
   Type *ltype = node->lhs->type;
-  if (node->lhs->kind == ND_LVAR &&
+  if ((node->lhs->kind == ND_LVAR || node->lhs->kind == ND_GVAR) &&
       (ltype->kind == PTR || ltype->kind == ARRAY)) {
     int offset = size_of(ltype->ptr_to);
     printf("  imul rdi, %d\n", offset);
   }
 
   Type *rtype = node->rhs->type;
-  if (node->rhs->kind == ND_LVAR &&
+  if ((node->rhs->kind == ND_LVAR || node->rhs->kind == ND_GVAR) &&
       (rtype->kind == PTR || rtype->kind == ARRAY)) {
     int offset = size_of(rtype->ptr_to);
     printf("  imul rax, %d\n", offset);
@@ -388,10 +388,23 @@ void gen_ne(Node *node) {
   printf("  push rax\n");
 }
 
+void gen_cmp(Node *lhs) {
+  TypeKind type = lhs->type->kind;
+  if (type == CHAR) {
+    printf("  cmp al, dil\n");
+  } else if (type == SHORT) {
+    printf("  cmp ax, di\n");
+  } else if (type == INT || type == ENUM) {
+    printf("  cmp eax, edi\n");
+  } else {
+    printf("  cmp rax, rdi\n");
+  }
+}
+
 void gen_lt(Node *node) {
   gen_child(node);
 
-  printf("  cmp rax, rdi\n");
+  gen_cmp(node->lhs);
   printf("  setl al\n");
   printf("  movzb rax, al\n");
 
@@ -401,7 +414,7 @@ void gen_lt(Node *node) {
 void gen_le(Node *node) {
   gen_child(node);
 
-  printf("  cmp rax, rdi\n");
+  gen_cmp(node->lhs);
   printf("  setle al\n");
   printf("  movzb rax, al\n");
 
