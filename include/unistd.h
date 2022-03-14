@@ -13,7 +13,7 @@ extern int close(int fd);
 
 extern int dup2(int fd1, int fd2);
 
-extern int execl(char *path, char *arg, ...);
+extern int execlp(char *file, char *arg, ...);
 
 extern int write(int fd, void *buf, int n);
 

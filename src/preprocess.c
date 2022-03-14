@@ -19,8 +19,7 @@ char *preprocess(char *program) {
     dup2(pipe_parent[STDIN_FILENO], STDIN_FILENO);
     dup2(pipe_child[STDOUT_FILENO], STDOUT_FILENO);
 
-    execl("/usr/bin/cpp", "/usr/bin/cpp", "-I", "include", "-I", "src", "-P",
-          NULL);
+    execlp("./preprocess.sh", "./preprocess.sh", NULL);
 
     error("not reachable");
   } else { // parent
@@ -35,6 +34,6 @@ char *preprocess(char *program) {
     return buf;
   }
 
-  error("not reachable");
+  error("not reachable2");
   return NULL;
 }
