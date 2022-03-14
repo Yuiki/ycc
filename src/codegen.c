@@ -1,5 +1,6 @@
 #include "ycc.h"
 #include <stdio.h>
+#include <string.h>
 
 int label_loop_idx;
 int label_cond_idx;
@@ -549,7 +550,12 @@ void gen(Node *node) {
 
 void gen_program() {
   printf(".intel_syntax noprefix\n");
-  printf(".globl main\n");
+  for (int i = 0; globals[i]; i++) {
+    Node *global = globals[i];
+    if (global->func) {
+      printf(".globl %.*s\n", global->func_len, global->func);
+    }
+  }
 
   // gen strs
   for (Str *str = strs; str; str = str->next) {
@@ -558,7 +564,7 @@ void gen_program() {
   }
 
   // gen globals
-  for (int i = 0; globals[i]; i++) {
-    gen(globals[i]);
+  for (int j = 0; globals[j]; j++) {
+    gen(globals[j]);
   }
 }
