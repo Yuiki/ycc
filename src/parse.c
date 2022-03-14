@@ -352,9 +352,7 @@ Ident *find_var(Token *tok, bool current) {
   return NULL;
 }
 
-Node *create_var(Token *tok, Type *type) {
-  Node *node = new_node(ND_LVAR, type);
-
+Node *register_var(Node *node, Token *tok, Type *type) {
   Ident *lvar = find_var(tok, true);
   if (lvar) {
     error_at(token->str, "the variable is already declared");
@@ -370,6 +368,11 @@ Node *create_var(Token *tok, Type *type) {
   node->offset = lvar->offset;
 
   return node;
+}
+
+Node *create_var(Token *tok, Type *type) {
+  Node *node = new_node(ND_LVAR, type);
+  return register_var(node, tok, type);
 }
 
 // return str index
@@ -419,7 +422,7 @@ Node *decla() {
     type = arr_type;
   }
 
-  Node *var = create_var(ident, type);
+  Node *var = new_node(ND_LVAR, type);
 
   if (consume("=")) {
     if (consume("{")) {
@@ -448,10 +451,10 @@ Node *decla() {
       }
 
       if (arr_len == -1) {
-        var->type->array_size = init_idx + 1;
-        var->offset += size_of(var->type);
-        arr_len = var->type->array_size;
+        arr_len = init_idx + 1;
+        var->type->array_size = arr_len;
       }
+      register_var(var, ident, type);
 
       // zero initialization
       Node *zero = new_node_num(0);
@@ -477,10 +480,12 @@ Node *decla() {
       error_at(token->str, "unknown array size");
     }
 
+    register_var(var, ident, type);
     Node *node = new_node_child(ND_ASSIGN, var, equality());
     expect(";");
     return node;
   } else {
+    register_var(var, ident, type);
     expect(";");
     return new_node(ND_NOP, NULL);
   }
@@ -669,7 +674,14 @@ Node *postfix() {
       continue;
     }
     if (consume("->")) {
-      node = member(node->type->ptr_to->member, node);
+      if (node->kind == ND_LVAR) {
+        Node *deref = new_node(ND_DEREF, node->type);
+        node->type = node->type->ptr_to;
+        deref->lhs = node;
+        node = member(node->type->member, deref);
+      } else {
+        node = member(node->type->ptr_to->member, node);
+      }
       continue;
     }
     if (consume(".")) {
