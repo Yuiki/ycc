@@ -32,7 +32,7 @@ $(BUILD)/gen2/ycc: $(GEN2_OBJS)
 #	$(CC) $(CFLAGS) -o $(BUILD)/gen2/file.o -c $(SRC)/file.c
 	$(CC) $(CFLAGS) -o $(BUILD)/gen2/parse.o -c $(SRC)/parse.c
 #	$(CC) $(CFLAGS) -o $(BUILD)/gen2/size.o -c $(SRC)/size.c
-	$(CC) $(CFLAGS) -o $(BUILD)/gen2/tokenize.o -c $(SRC)/tokenize.c
+#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/tokenize.o -c $(SRC)/tokenize.c
 #	$(CC) $(CFLAGS) -o $(BUILD)/gen2/main.o -c $(SRC)/main.c
 	$(CC) $(CFLAGS) -o $@ $^
 
@@ -67,4 +67,4 @@ clean:
 
 .PHONY: test host clean
 
-.PRECIOUS: $(BUILD)/gen2/%.S
+.PRECIOUS: $(BUILD)/gen2/%.S $(BUILD)/gen3/%.S

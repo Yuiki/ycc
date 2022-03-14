@@ -162,6 +162,9 @@ bool tokenize_char(char **pp, Token **pcur) {
       case '\'':
         c = '\'';
         break;
+      case '\\':
+        c = '\\';
+        break;
       }
       len = 2;
     } else {
