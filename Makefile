@@ -4,18 +4,67 @@ SRC=src
 BUILD=build
 
 SRCS=$(wildcard $(SRC)/*.c)
-OBJS=$(SRCS:$(SRC)/%.c=$(BUILD)/%.o)
 
-$(BUILD)/ycc: $(OBJS)
+GEN1_OBJS=$(SRCS:$(SRC)/%.c=$(BUILD)/gen1/%.o)
+
+GEN2_ASMS=$(SRCS:$(SRC)/%.c=$(BUILD)/gen2/%.S)
+GEN2_OBJS=$(SRCS:$(SRC)/%.c=$(BUILD)/gen2/%.o)
+
+GEN3_ASMS=$(SRCS:$(SRC)/%.c=$(BUILD)/gen3/%.S)
+GEN3_OBJS=$(SRCS:$(SRC)/%.c=$(BUILD)/gen3/%.o)
+
+gen1: $(BUILD)/gen1/ycc
+
+gen2: $(BUILD)/gen2/ycc
+
+gen3: $(BUILD)/gen3/ycc
+
+$(BUILD)/gen1/ycc: $(GEN1_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
-$(BUILD)/%.o: $(SRC)/%.c
+$(BUILD)/gen1/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-test: $(BUILD)/ycc
+$(BUILD)/gen2/ycc: $(GEN2_OBJS)
+	$(CC) $(CFLAGS) -o $(BUILD)/gen2/error.o -c $(SRC)/error.c
+	$(CC) $(CFLAGS) -o $(BUILD)/gen2/preprocess.o -c $(SRC)/preprocess.c
+	$(CC) $(CFLAGS) -o $(BUILD)/gen2/codegen.o -c $(SRC)/codegen.c
+	$(CC) $(CFLAGS) -o $(BUILD)/gen2/file.o -c $(SRC)/file.c
+	$(CC) $(CFLAGS) -o $(BUILD)/gen2/parse.o -c $(SRC)/parse.c
+#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/size.o -c $(SRC)/size.c
+	$(CC) $(CFLAGS) -o $(BUILD)/gen2/tokenize.o -c $(SRC)/tokenize.c
+	$(CC) $(CFLAGS) -o $(BUILD)/gen2/main.o -c $(SRC)/main.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+$(BUILD)/gen2/%.o: $(BUILD)/gen2/%.S
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(BUILD)/gen2/%.S: $(SRC)/%.c
+	$(BUILD)/gen1/ycc $^ > $@
+
+$(BUILD)/gen3/ycc: $(GEN3_OBJS)
+	$(CC) $(CFLAGS) -o $(BUILD)/gen3/error.o -c $(SRC)/error.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+$(BUILD)/gen3/%.o: $(BUILD)/gen3/%.S
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(BUILD)/gen3/%.S: $(SRC)/%.c
+	$(BUILD)/gen2/ycc $^ > $@
+
+test: $(BUILD)/gen1/ycc
 	./test.sh
 
-clean:
-	rm -f $(BUILD)/*
+host:
+	make clean
+	make gen1
+	make gen2
+	make gen3
 
-.PHONY: test clean
+clean:
+	rm -rf $(BUILD)/*
+	mkdir $(BUILD)/gen1 $(BUILD)/gen2 $(BUILD)/gen3
+
+.PHONY: test host clean
+
+.PRECIOUS: $(BUILD)/gen2/%.S
