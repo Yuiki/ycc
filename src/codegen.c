@@ -3,6 +3,7 @@
 #include <string.h>
 
 int label_loop_idx;
+int current_label_loop_idx;
 int label_cond_idx;
 
 void gen();
@@ -194,8 +195,7 @@ void gen_continue(Node *node) {
 }
 
 void gen_break(Node *node) {
-  int idx = label_loop_idx - 1;
-  printf("  jmp .Lend%d\n", idx);
+  printf("  jmp .Lend%d\n", current_label_loop_idx);
 }
 
 void gen_return(Node *node) {
@@ -223,6 +223,7 @@ void gen_if(Node *node) {
 
 void gen_switch(Node *node) {
   int end_label = label_loop_idx++;
+  current_label_loop_idx = end_label;
 
   gen(node->cond);
   printf("  pop rax\n");
@@ -248,6 +249,8 @@ void gen_switch(Node *node) {
   gen(node->then);
 
   printf(".Lend%d:\n", end_label);
+
+  current_label_loop_idx = end_label - 1;
 }
 
 void gen_case(Node *node) {
@@ -259,6 +262,8 @@ void gen_case(Node *node) {
 
 void gen_while(Node *node) {
   int idx = label_loop_idx++;
+  current_label_loop_idx = idx;
+
   printf(".Lbegin%d:\n", idx);
   gen(node->cond);
   printf("  pop rax\n");
@@ -268,20 +273,24 @@ void gen_while(Node *node) {
   printf(".Lcontin%d:\n", idx);
   printf("  jmp .Lbegin%d\n", idx);
   printf(".Lend%d:\n", idx);
+
+  current_label_loop_idx = idx - 1;
 }
 
 void gen_for(Node *node) {
   int idx = label_loop_idx++;
+  current_label_loop_idx = idx;
+
   if (node->init) {
     gen(node->init);
   }
   printf(".Lbegin%d:\n", idx);
   if (node->cond) {
     gen(node->cond);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lend%d\n", idx);
   }
-  printf("  pop rax\n");
-  printf("  cmp rax, 0\n");
-  printf("  je .Lend%d\n", idx);
   if (node->then) {
     gen(node->then);
   }
@@ -289,6 +298,8 @@ void gen_for(Node *node) {
   gen(node->step);
   printf("  jmp .Lbegin%d\n", idx);
   printf(".Lend%d:\n", idx);
+
+  current_label_loop_idx = idx - 1;
 }
 
 void gen_block(Node *node) {

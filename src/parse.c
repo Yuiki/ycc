@@ -674,7 +674,7 @@ Node *postfix() {
       continue;
     }
     if (consume("->")) {
-      if (node->kind == ND_LVAR) {
+      if (node->kind == ND_LVAR || node->kind == ND_GVAR) {
         Node *deref = new_node(ND_DEREF, node->type);
         node->type = node->type->ptr_to;
         deref->lhs = node;

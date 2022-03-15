@@ -30,7 +30,7 @@ $(BUILD)/gen2/ycc: $(GEN2_OBJS)
 #	$(CC) $(CFLAGS) -o $(BUILD)/gen2/preprocess.o -c $(SRC)/preprocess.c
 #	$(CC) $(CFLAGS) -o $(BUILD)/gen2/codegen.o -c $(SRC)/codegen.c
 #	$(CC) $(CFLAGS) -o $(BUILD)/gen2/file.o -c $(SRC)/file.c
-	$(CC) $(CFLAGS) -o $(BUILD)/gen2/parse.o -c $(SRC)/parse.c
+#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/parse.o -c $(SRC)/parse.c
 #	$(CC) $(CFLAGS) -o $(BUILD)/gen2/size.o -c $(SRC)/size.c
 #	$(CC) $(CFLAGS) -o $(BUILD)/gen2/tokenize.o -c $(SRC)/tokenize.c
 #	$(CC) $(CFLAGS) -o $(BUILD)/gen2/main.o -c $(SRC)/main.c
