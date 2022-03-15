@@ -428,26 +428,6 @@ void gen_mod(Node *node) {
   printf("  push rdx\n");
 }
 
-void gen_eq(Node *node) {
-  gen_child(node);
-
-  printf("  cmp rax, rdi\n");
-  printf("  sete al\n");
-  printf("  movzb rax, al\n");
-
-  printf("  push rax\n");
-}
-
-void gen_ne(Node *node) {
-  gen_child(node);
-
-  printf("  cmp rax, rdi\n");
-  printf("  setne al\n");
-  printf("  movzb rax, al\n");
-
-  printf("  push rax\n");
-}
-
 void gen_cmp(Node *lhs) {
   TypeKind type = lhs->type->kind;
   if (type == CHAR) {
@@ -459,6 +439,26 @@ void gen_cmp(Node *lhs) {
   } else {
     printf("  cmp rax, rdi\n");
   }
+}
+
+void gen_eq(Node *node) {
+  gen_child(node);
+
+  gen_cmp(node->lhs);
+  printf("  sete al\n");
+  printf("  movzb rax, al\n");
+
+  printf("  push rax\n");
+}
+
+void gen_ne(Node *node) {
+  gen_child(node);
+
+  gen_cmp(node->lhs);
+  printf("  setne al\n");
+  printf("  movzb rax, al\n");
+
+  printf("  push rax\n");
 }
 
 void gen_lt(Node *node) {
