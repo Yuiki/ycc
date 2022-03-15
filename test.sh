@@ -3,10 +3,10 @@
 set -e
 
 echo 'COMPILE'
-./build/gen1/ycc ./test/test.c > ./build/tmp.s
+./build/ycc_gen1 ./test/test.c > ./build/test.s
 echo 'LINK'
-cc -o ./build/tmp ./build/tmp.s
+cc -o ./build/test ./build/test.s
 echo 'RUN'
-./build/tmp
+./build/test
 
 echo 'OK'
