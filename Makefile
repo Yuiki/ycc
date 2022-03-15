@@ -26,14 +26,6 @@ $(BUILD)/gen1/%.o: $(SRC)/%.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 $(BUILD)/gen2/ycc: $(GEN2_OBJS)
-	$(CC) $(CFLAGS) -o $(BUILD)/gen2/error.o -c $(SRC)/error.c
-#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/preprocess.o -c $(SRC)/preprocess.c
-#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/codegen.o -c $(SRC)/codegen.c
-#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/file.o -c $(SRC)/file.c
-#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/parse.o -c $(SRC)/parse.c
-#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/size.o -c $(SRC)/size.c
-#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/tokenize.o -c $(SRC)/tokenize.c
-#	$(CC) $(CFLAGS) -o $(BUILD)/gen2/main.o -c $(SRC)/main.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 $(BUILD)/gen2/%.o: $(BUILD)/gen2/%.S
@@ -43,7 +35,6 @@ $(BUILD)/gen2/%.S: $(SRC)/%.c
 	$(BUILD)/gen1/ycc $^ > $@
 
 $(BUILD)/gen3/ycc: $(GEN3_OBJS)
-	$(CC) $(CFLAGS) -o $(BUILD)/gen3/error.o -c $(SRC)/error.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 $(BUILD)/gen3/%.o: $(BUILD)/gen3/%.S

@@ -5,7 +5,7 @@ char *filename;
 
 int main(int argc, char **argv) {
   if (argc != 2) {
-    fprintf(stderr, "引数の個数が正しくありません\n");
+    fprintf(stderr, "Incorrect number of arguments\n");
     return 1;
   }
 

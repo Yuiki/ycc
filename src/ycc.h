@@ -114,8 +114,9 @@ struct Node {
 
   int offset; // if kind = ND_LVAR
 
-  char *func;   // function name if kind = ND_CALL, ND_FUNC
-  int func_len; // func name len if kind = ND_CALL, ND_FUNC
+  char *func;      // function name if kind = ND_CALL, ND_FUNC
+  int func_len;    // func name len if kind = ND_CALL, ND_FUNC
+  bool has_vararg; // if kind = ND_FUNC
 
   Node *args; // if kind = ND_CALL
 

@@ -1089,6 +1089,7 @@ Node *func(Token *name, Type *ret_ty) {
   while (!consume(")")) {
     // TODO: support properly
     if (consume("...")) {
+      node->has_vararg = true;
       expect(")");
       break;
     }

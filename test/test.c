@@ -924,6 +924,17 @@ void typedefs() {
   assert(baz.bar, 10);
 }
 
+void vararg1(char *fmt, ...) {
+  _va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stdout, fmt, ap);
+}
+
+void varargs() {
+  printf("test: varargs\n");
+  vararg1("%s\n", "vararg1");
+}
+
 int main() {
   arith();
   cmp();
@@ -955,5 +966,6 @@ int main() {
   func_decla();
   externs();
   typedefs();
+  varargs();
   return 0;
 }

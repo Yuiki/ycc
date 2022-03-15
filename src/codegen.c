@@ -95,18 +95,22 @@ void gen_epilogue() {
   printf("  ret\n");
 }
 
+int stack_size;
+int param_len;
+
 void gen_func(Node *node) {
   printf("%.*s:\n", node->func_len, node->func);
 
   // prologue
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  int stack_size = node->lvars_size;
+  stack_size = node->lvars_size;
   printf("  sub rsp, %d\n", stack_size);
 
   // TODO: support >6 params
   Node *param = node->params;
-  for (int i = 0; param != NULL && i < 6; i++, param = param->next) {
+  int i;
+  for (i = 0; param != NULL && i < 6; i++, param = param->next) {
     gen_val(param);
 
     if (i == 0) {
@@ -125,10 +129,35 @@ void gen_func(Node *node) {
 
     store(param->type->kind);
   }
+  param_len = i;
+
+  if (node->has_vararg) {
+    // Register Save Area
+    printf("  sub rsp, 48\n");
+    printf("  mov r10, rsp\n");
+
+    for (int i = 0; i < 6; i++) {
+      printf("  add r10, 8\n");
+
+      if (i == 0) {
+        printf("  mov r11, rdi\n");
+      } else if (i == 1) {
+        printf("  mov r11, rsi\n");
+      } else if (i == 2) {
+        printf("  mov r11, rdx\n");
+      } else if (i == 3) {
+        printf("  mov r11, rcx\n");
+      } else if (i == 4) {
+        printf("  mov r11, r8\n");
+      } else if (i == 5) {
+        printf("  mov r11, r9\n");
+      }
+
+      printf("  mov [r10], r11\n");
+    }
+  }
 
   gen(node->block);
-
-  printf("  pop rax\n");
 
   // epilogue
   // TODO: remove
@@ -136,6 +165,26 @@ void gen_func(Node *node) {
 }
 
 void gen_call(Node *node) {
+  if (!strncmp(node->func, "__ycc_builtin_va_start", node->func_len)) {
+    printf("  mov rdi, rbp\n");
+    printf("  sub rdi, %d\n", node->args->offset);
+
+    printf("  mov DWORD PTR [rdi], %d\n", param_len * 8);
+
+    printf("  add rdi, 4\n");
+    printf("  mov DWORD PTR [rdi], 0\n");
+
+    printf("  add rdi, 4\n");
+    printf("  mov QWORD PTR [rdi], 100\n");
+
+    printf("  mov r10, rbp\n");
+    printf("  sub r10, %d\n", stack_size + 48 - param_len * 8);
+
+    printf("  add rdi, 8\n");
+    printf("  mov QWORD PTR [rdi], r10\n");
+    return;
+  }
+
   // TODO: support >6 args
   int var_size = 0;
   for (Node *arg = node->args; arg && var_size < 6;

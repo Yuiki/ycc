@@ -6,6 +6,9 @@
 typedef struct {
 } FILE;
 
+extern FILE *stdout;
+#define stdout stdout
+
 extern FILE *stderr;
 #define stderr stderr
 
